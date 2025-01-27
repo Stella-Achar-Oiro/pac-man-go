@@ -1,0 +1,170 @@
+:root {
+    --cell-size: 20px;
+    --pacman-color: #FFFF00;
+    --ghost-color: #FF0000;
+    --wall-color: #2121DE;
+    --dot-color: #FFFFFF;
+    --bg-color: #000000;
+    --frightened-color: #2121DE;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    color: white;
+}
+
+.game-container {
+    position: relative;
+    will-change: transform;
+}
+
+#game-board {
+    display: grid;
+    background-color: var(--bg-color);
+    gap: 1px;
+    padding: 10px;
+    border: 2px solid #2121DE;
+    will-change: transform;
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    position: relative;
+    will-change: transform;
+}
+
+.wall {
+    background-color: var(--wall-color);
+}
+
+.dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: var(--dot-color);
+    border-radius: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.power-pellet {
+    width: 8px;
+    height: 8px;
+    animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.pacman {
+    position: absolute;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    background-color: transparent;
+    border-radius: 50%;
+    will-change: transform;
+    animation: chomp 0.2s linear infinite;
+    clip-path: polygon(100% 0, 
+        100% 100%, 
+        50% 50%, 
+        0 100%, 
+        0 0);
+}
+
+@keyframes chomp {
+    0% { clip-path: polygon(100% 0, 100% 100%, 50% 50%, 0 100%, 0 0); }
+    50% { clip-path: polygon(100% 35, 100% 65, 50% 50, 0 65, 0 35); }
+    100% { clip-path: polygon(100% 0, 100% 100%, 50% 50%, 0 100%, 0 0); }
+}
+
+.ghost {
+    position: absolute;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    background-color: var(--ghost-color);
+    border-radius: 50% 50% 0 0;
+    will-change: transform;
+}
+
+.ghost::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: currentColor;
+    clip-path: polygon(
+        0% 0%, 25% 100%, 50% 0%, 75% 100%, 100% 0%
+    );
+}
+
+.ghost.frightened {
+    background-color: var(--frightened-color);
+    animation: flash 0.4s infinite;
+}
+
+@keyframes flash {
+    0% { filter: brightness(100%); }
+    50% { filter: brightness(70%); }
+    100% { filter: brightness(100%); }
+}
+
+.hud {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    font-size: 1.2em;
+    background-color: rgba(0, 0, 0, 0.8);
+    font-family: 'Press Start 2P', monospace;
+}
+
+.pause-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border: 2px solid #2121DE;
+    text-align: center;
+    z-index: 100;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.pause-menu button {
+    display: block;
+    width: 200px;
+    margin: 10px auto;
+    padding: 10px;
+    background-color: #2121DE;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.pause-menu button:hover {
+    background-color: #4141FE;
+}
+
+.hidden {
+    display: none;
+} 
