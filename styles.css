@@ -167,4 +167,44 @@ body {
 
 .hidden {
     display: none;
+}
+
+.start-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 2rem;
+    border: 2px solid var(--wall-color);
+    z-index: 100;
+}
+
+.start-screen h2 {
+    color: yellow;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    animation: blink 1s infinite;
+}
+
+.start-screen button {
+    background-color: var(--wall-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-family: 'Press Start 2P', monospace;
+    cursor: pointer;
+    margin: 1rem 0;
+    font-size: 1rem;
+}
+
+.start-screen button:hover {
+    background-color: #4141FE;
+}
+
+.start-screen .instructions {
+    color: white;
+    font-size: 0.8rem;
+    margin-top: 2rem;
 } 

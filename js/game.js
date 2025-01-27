@@ -8,6 +8,8 @@ class Game {
         this.livesElement = document.getElementById('lives');
         this.timerElement = document.getElementById('timer');
         this.pauseMenu = document.getElementById('pause-menu');
+        this.startScreen = document.getElementById('start-screen');
+        this.gameContent = document.getElementById('game-content');
         
         this.score = 0;
         this.lives = 3;
@@ -17,6 +19,7 @@ class Game {
         this.isGameOver = false;
         this.powerPelletActive = false;
         this.powerPelletTimer = null;
+        this.isGameStarted = false;
         
         this.pacman = { x: 13, y: 23, direction: 'right' };
         this.ghosts = [
@@ -30,11 +33,18 @@ class Game {
         this.soundManager = new AudioManager();
         this.setupEventListeners();
         this.createBoard();
-        this.startGame();
     }
 
     setupEventListeners() {
+        // Start button listener
+        document.getElementById('start-button').addEventListener('click', () => {
+            this.startGame();
+        });
+
+        // Only set up game controls after game starts
         window.addEventListener('keydown', (e) => {
+            if (!this.isGameStarted) return;
+            
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(e.key)) {
                 this.keys[e.key] = true;
                 if (e.key === 'Escape') this.togglePause();
@@ -43,6 +53,8 @@ class Game {
         });
 
         window.addEventListener('keyup', (e) => {
+            if (!this.isGameStarted) return;
+            
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 this.keys[e.key] = false;
             }
@@ -300,13 +312,22 @@ class Game {
     }
 
     startGame() {
+        this.isGameStarted = true;
+        this.startScreen.classList.add('hidden');
+        this.gameContent.classList.remove('hidden');
         this.lastTime = performance.now();
         this.soundManager.play('start');
-        setTimeout(() => this.soundManager.play('siren'), 4000); // Start siren after intro
+        setTimeout(() => {
+            if (this.isGameStarted && !this.isPaused) {
+                this.soundManager.play('siren');
+            }
+        }, 4000);
         this.gameLoop();
     }
 
     gameLoop(currentTime = 0) {
+        if (!this.isGameStarted) return;
+        
         if (!this.isPaused) {
             const deltaTime = (currentTime - this.lastTime) / 1000;
             this.lastTime = currentTime;

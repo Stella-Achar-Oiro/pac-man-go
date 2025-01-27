@@ -10,16 +10,23 @@
 <body>
     <div class="game-container">
         <h1 class="game-title">PAC-MAN</h1>
-        <div class="hud">
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="lives">Lives: <span id="lives">3</span></div>
-            <div class="timer">Time: <span id="timer">0</span></div>
+        <div id="start-screen" class="start-screen">
+            <h2>READY!</h2>
+            <button id="start-button">PRESS TO START</button>
+            <p class="instructions">Use arrow keys to move</p>
         </div>
-        <div id="game-board"></div>
-        <div id="pause-menu" class="pause-menu hidden">
-            <h2>PAUSED</h2>
-            <button id="continue">Continue</button>
-            <button id="restart">Restart</button>
+        <div id="game-content" class="hidden">
+            <div class="hud">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="lives">Lives: <span id="lives">3</span></div>
+                <div class="timer">Time: <span id="timer">0</span></div>
+            </div>
+            <div id="game-board"></div>
+            <div id="pause-menu" class="pause-menu hidden">
+                <h2>PAUSED</h2>
+                <button id="continue">Continue</button>
+                <button id="restart">Restart</button>
+            </div>
         </div>
     </div>
     <script type="module" src="js/constants.js"></script>
