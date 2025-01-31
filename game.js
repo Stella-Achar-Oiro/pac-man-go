@@ -63,24 +63,17 @@ document.getElementById("play").addEventListener("click", function game() {
 	createBoard();
 	
 //User's best score
-	function bestScoreCount () {
-		let higher;
-		let bestScore = window.localStorage.getItem(higher);
-		window.localStorage.setItem(bestScore, higher);
-		const bestScoreDisplay = document.getElementById("bestScore");
-		if (bestScore == null) {
-			bestScore = score;
-			window.localStorage.setItem(higher, bestScore);
-		} else if (score < Number(window.localStorage.getItem(higher))) {
-			bestScore = score;	
-		} else if (score > Number(window.localStorage.getItem(higher))) {
-			window.localStorage.clear();
-			bestScore = score;
-			window.localStorage.setItem(higher, bestScore);
+	function bestScoreCount() {
+		const STORAGE_KEY = 'pacman-best-score';
+		let currentBestScore = localStorage.getItem(STORAGE_KEY) || 0;
+		
+		if (score > Number(currentBestScore)) {
+			localStorage.setItem(STORAGE_KEY, score);
+			currentBestScore = score;
 		}
-		bestScoreDisplay.innerHTML = window.localStorage.getItem(higher);
+		
+		document.getElementById("bestScore").innerHTML = currentBestScore;
 	}
-	bestScoreCount();
 	
 // Starting position of Pac-Man
 	let pacmanCurrentIndex = 518;
@@ -263,46 +256,59 @@ document.getElementById("play").addEventListener("click", function game() {
 
 // Move the ghosts 
 	ghosts.forEach(ghost => moveGhost(ghost));
-
-	function moveGhost (ghost) {
+	// Ghost Movement Enhancement
+	function moveGhost(ghost) {
 		const directions = [-1, +1, width, -width];
 		let direction = directions[Math.floor(Math.random() * directions.length)];
-		ghost.timerId = setInterval(function () {
-			if (!squares[ghost.currentIndex + direction].classList.contains("ghost") && !squares[ghost.currentIndex + direction].classList.contains("wall")) {
-				squares[ghost.currentIndex].classList.remove(ghost.className);
-				squares[ghost.currentIndex].classList.remove("ghost", "scared-ghost");
-				ghost.currentIndex += direction;
-				squares[ghost.currentIndex].classList.add(ghost.className, "ghost");
-			} else if (ghost.currentIndex - 1 === 363) {
-				squares[ghost.currentIndex].classList.remove(ghost.className, "ghost");
-				ghost.currentIndex = 391;
-				squares[ghost.currentIndex].classList.add("ghost");
+		
+		ghost.timerId = setInterval(() => {
+			// Check if the next move is valid
+			const nextIndex = ghost.currentIndex + direction;
+			const isValidMove = !squares[nextIndex].classList.contains("wall") && 
+							!squares[nextIndex].classList.contains("ghost");
+			
+			// Portal handling
+			if (ghost.currentIndex - 1 === 363) {
+				handlePortal(ghost, 391);
 			} else if (ghost.currentIndex + 1 === 392) {
-				squares[ghost.currentIndex].classList.remove(ghost.className, "ghost");
-				ghost.currentIndex = 364;
-				squares[ghost.currentIndex].classList.add("ghost");
+				handlePortal(ghost, 364);
+			} else if (isValidMove) {
+				moveGhostTo(ghost, nextIndex);
 			} else {
-				direction = directions[Math.floor(Math.random() * directions.length)]
+				// Choose new random direction
+				direction = directions[Math.floor(Math.random() * directions.length)];
 			}
-
 			
-			if (ghost.isScared) {
-				squares[ghost.currentIndex].classList.add("scared-ghost");
-			}
-
-			if (squares[pacmanCurrentIndex].classList.contains("scared-ghost")) {
-				squares[ghost.currentIndex].classList.remove(ghost.className, "ghost", "scared-ghost");
-				ghost.currentIndex = ghost.startIndex;
-				score += 100;
-				scoreDisplay.innerHTML = score;
-				squares[ghost.currentIndex].classList.add(ghost.className, "ghost");
-			}
-				
+			handleGhostStates(ghost);
 			checkForGameOver();
-			
-		}, ghost.speed)
+		}, ghost.speed);
 	}
 
+	function handlePortal(ghost, newIndex) {
+		squares[ghost.currentIndex].classList.remove(ghost.className, "ghost");
+		ghost.currentIndex = newIndex;
+		squares[ghost.currentIndex].classList.add(ghost.className, "ghost");
+	}
+
+	function moveGhostTo(ghost, newIndex) {
+		squares[ghost.currentIndex].classList.remove(ghost.className, "ghost", "scared-ghost");
+		ghost.currentIndex = newIndex;
+		squares[ghost.currentIndex].classList.add(ghost.className, "ghost");
+	}
+
+	function handleGhostStates(ghost) {
+		if (ghost.isScared) {
+			squares[ghost.currentIndex].classList.add("scared-ghost");
+		}
+		
+		if (squares[pacmanCurrentIndex].classList.contains("scared-ghost")) {
+			squares[ghost.currentIndex].classList.remove(ghost.className, "ghost", "scared-ghost");
+			ghost.currentIndex = ghost.startIndex;
+			score += 100;
+			scoreDisplay.innerHTML = score;
+			squares[ghost.currentIndex].classList.add(ghost.className, "ghost");
+		}
+	}
 // Check for Game Over
 	function checkForGameOver () {
 		if (squares[pacmanCurrentIndex].classList.contains("ghost") && !squares[pacmanCurrentIndex].classList.contains("scared-ghost")) {
