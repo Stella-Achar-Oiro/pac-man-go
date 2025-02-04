@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: 'PacmanFont';
-  src: url('assets/fonts/PressStart2P-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/PressStart2P-Regular.ttf') format('truetype');
 }
 
 body {
