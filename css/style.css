@@ -14,7 +14,17 @@ body {
   align-items: center;
   min-height: 100vh;
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'PacmanFont', Arial, sans-serif;
+  color: #ffff00;
+}
+
+.game-title {
+  font-size: 48px;
+  text-align: center;
+  margin: 20px 0;
+  color: #ffff00;
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 #wrapper {
@@ -27,7 +37,74 @@ body {
   background: #000;
   border: 8px solid #2121ff;
   border-radius: 10px;
-  min-width: 800px;
+  min-width: 1200px;
+}
+
+#game-container {
+  display: flex;
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.game-section {
+  flex: 1;
+}
+
+.instructions-section {
+  flex: 0.8;
+  max-width: 400px;
+}
+
+.instructions-panel {
+  background: rgba(0, 0, 0, 0.8);
+  border: 4px solid #2121ff;
+  border-radius: 8px;
+  padding: 20px;
+  color: #ffff00;
+}
+
+.instructions-panel h2 {
+  font-size: 24px;
+  text-align: center;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+}
+
+.instructions-panel h3 {
+  font-size: 18px;
+  margin: 15px 0 10px 0;
+  color: #2121ff;
+}
+
+.controls ul, .scoring ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.controls li, .scoring li {
+  font-size: 14px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+}
+
+.character-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.character-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.character-item span {
+  font-size: 12px;
 }
 
 #game {
@@ -46,7 +123,7 @@ body {
   gap: 15px;
   margin-bottom: 20px;
   padding: 15px;
-  background: #000;
+  background: rgba(0, 0, 0, 0.8);
   border: 4px solid #2121ff;
   border-radius: 8px;
 }
@@ -56,11 +133,11 @@ body {
   align-items: center;
   justify-content: center;
   padding: 10px 15px;
-  background: #000;
+  background: rgba(0, 0, 0, 0.8);
   border: 3px solid #ffff00;
   border-radius: 5px;
   color: #ffff00;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
   min-height: 50px;

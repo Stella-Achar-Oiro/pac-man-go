@@ -8,14 +8,63 @@
   </head>
   <body>
     <div id="wrapper">
-      <div id="game-stats">
-        <div id="timer">Time: 0s</div>
-        <div id="score">Score: 0</div>
-        <div id="lives">Lives: 3</div>
-        <div id="fps">FPS: 0</div>
-      </div>
-      <div id="game">
-        <div class="ready hide">Ready!</div>
+      <h1 class="game-title">PAC-MAN</h1>
+      <div id="game-container">
+        <div class="game-section">
+          <div id="game-stats">
+            <div id="timer">Time: 0s</div>
+            <div id="score">Score: 0</div>
+            <div id="lives">Lives: 3</div>
+            <div id="fps">FPS: 0</div>
+          </div>
+          <div id="game">
+            <div class="ready hide">Ready!</div>
+          </div>
+        </div>
+        <div class="instructions-section">
+          <div class="instructions-panel">
+            <h2>How to Play</h2>
+            <div class="controls">
+              <h3>Controls</h3>
+              <ul>
+                <li>↑ Move Up</li>
+                <li>↓ Move Down</li>
+                <li>← Move Left</li>
+                <li>→ Move Right</li>
+                <li>ESC Pause Game</li>
+              </ul>
+            </div>
+            <div class="scoring">
+              <h3>Scoring</h3>
+              <ul>
+                <li>• Dot: 10 points</li>
+                <li>• Power Pill: 50 points</li>
+                <li>• Ghost: 100 points</li>
+              </ul>
+            </div>
+            <div class="characters">
+              <h3>Characters</h3>
+              <div class="character-list">
+                <div class="character-item">
+                  <div class="ghost blinky"></div>
+                  <span>Blinky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost pinky"></div>
+                  <span>Pinky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost inky"></div>
+                  <span>Inky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost clyde"></div>
+                  <span>Clyde</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="pause-menu" class="hide">
         <h2>Game Paused</h2>
