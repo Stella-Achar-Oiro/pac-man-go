@@ -1,74 +1,88 @@
+//board.js
 import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST } from './setup.js';
 
+// board.js - Optimized Board class
 class Board {
   constructor(DOMGrid) {
     this.dotCount = 0;
     this.grid = [];
     this.DOMGrid = DOMGrid;
+    // Pre-create reusable elements
+    this.gameStatusDiv = document.createElement('div');
+    this.gameStatusDiv.classList.add('game-status');
+    // Create a document fragment for batch DOM operations
+    this.fragment = document.createDocumentFragment();
+    // Cache commonly used methods
+    this.boundObjectExist = this.objectExist.bind(this);
   }
 
   showGameStatus(gameWin) {
-    // Create and show game win or game over
-    const div = document.createElement('div');
-    div.classList.add('game-status');
-    div.innerHTML = `${gameWin ? 'WIN!' : 'GAME OVER!'}`;
-    this.DOMGrid.appendChild(div);
+    this.gameStatusDiv.innerHTML = `${gameWin ? 'WIN!' : 'GAME OVER!'}`;
+    this.DOMGrid.appendChild(this.gameStatusDiv);
   }
 
   createGrid(level) {
     this.dotCount = 0;
     this.grid = [];
     this.DOMGrid.innerHTML = '';
-    // First set correct amount of columns based on Grid Size and Cell Size
-    this.DOMGrid.style.cssText = `grid-template-columns: repeat(${GRID_SIZE}, ${CELL_SIZE}px);`;
+    
+    // Set grid template using CSS custom property for better performance
+    this.DOMGrid.style.setProperty('--grid-size', GRID_SIZE);
+    this.DOMGrid.style.setProperty('--cell-size', `${CELL_SIZE}px`);
 
+    // Create squares using document fragment
     level.forEach((square) => {
       const div = document.createElement('div');
-      div.classList.add('square', CLASS_LIST[square]);
+      const squareType = CLASS_LIST[square];
+      div.className = `square ${squareType}`;
       div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`;
-      this.DOMGrid.appendChild(div);
+      this.fragment.appendChild(div);
       this.grid.push(div);
-
-      // Add dots
-      if (CLASS_LIST[square] === OBJECT_TYPE.DOT) this.dotCount++;
+      if (squareType === OBJECT_TYPE.DOT) this.dotCount++;
     });
+
+    // Batch DOM update
+    this.DOMGrid.appendChild(this.fragment);
   }
 
+  // Optimized class manipulation methods
   addObject(pos, classes) {
-    this.grid[pos].classList.add(...classes);
+    if (pos >= 0 && pos < this.grid.length) {
+      this.grid[pos].classList.add(...classes);
+    }
   }
 
   removeObject(pos, classes) {
-    this.grid[pos].classList.remove(...classes);
+    if (pos >= 0 && pos < this.grid.length) {
+      this.grid[pos].classList.remove(...classes);
+    }
   }
-  // Can have an arrow function here cause of this binding
-  objectExist(pos, object) {
-    return this.grid[pos].classList.contains(object);
-  };
 
+  objectExist(pos, object) {
+    return pos >= 0 && pos < this.grid.length && this.grid[pos].classList.contains(object);
+  }
+
+  // Use CSS transform for better performance
   rotateDiv(pos, deg) {
-    this.grid[pos].style.transform = `rotate(${deg}deg)`;
+    if (pos >= 0 && pos < this.grid.length) {
+      this.grid[pos].style.transform = `rotate(${deg}deg)`;
+    }
   }
 
   moveCharacter(character) {
-    if (character.shouldMove()) {
-      const { nextMovePos, direction } = character.getNextMove(
-        this.objectExist.bind(this)
-      );
-      const { classesToRemove, classesToAdd } = character.makeMove();
+    if (!character.shouldMove()) return;
 
-      if (character.rotation && nextMovePos !== character.pos && direction !== null) {
-        // Rotate only if we have a valid direction
-        this.rotateDiv(nextMovePos, direction.rotation);
-        // Rotate the previous div back
-        this.rotateDiv(character.pos, 0);
-      }
+    const { nextMovePos, direction } = character.getNextMove(this.boundObjectExist);
+    const { classesToRemove, classesToAdd } = character.makeMove();
 
-      this.removeObject(character.pos, classesToRemove);
-      this.addObject(nextMovePos, classesToAdd);
-
-      character.setNewPos(nextMovePos, direction);
+    if (character.rotation && nextMovePos !== character.pos && direction) {
+      this.rotateDiv(nextMovePos, direction.rotation);
+      this.rotateDiv(character.pos, 0);
     }
+
+    this.removeObject(character.pos, classesToRemove);
+    this.addObject(nextMovePos, classesToAdd);
+    character.setNewPos(nextMovePos, direction);
   }
 
   static createGameBoard(DOMGrid, level) {

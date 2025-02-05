@@ -1,24 +1,23 @@
+//ghost.js
 import { DIRECTIONS, OBJECT_TYPE } from './setup.js';
 
-// Random movement function
+// ghost.js - Optimized Ghost movement
 function randomMovement(position, direction, objectExist) {
+  const dirs = Object.values(DIRECTIONS);
+  let nextMovePos;
   let dir = direction;
-  let nextMovePos = position + dir.movement;
-
-  // Create an array from the directions object keys
-  const keys = Object.keys(DIRECTIONS);
-
-  while (
+  let attempts = 0;
+  
+  do {
+    dir = dirs[Math.floor(Math.random() * dirs.length)];
+    nextMovePos = position + dir.movement;
+    attempts++;
+    // Prevent infinite loops
+    if (attempts > 10) return { nextMovePos: position, direction };
+  } while (
     objectExist(nextMovePos, OBJECT_TYPE.WALL) ||
     objectExist(nextMovePos, OBJECT_TYPE.GHOST)
-  ) {
-    // Get a random key from that array
-    const key = keys[Math.floor(Math.random() * keys.length)];
-    // Set the new direction
-    dir = DIRECTIONS[key];
-    // Set the next move
-    nextMovePos = position + dir.movement;
-  }
+  );
 
   return { nextMovePos, direction: dir };
 }
@@ -30,17 +29,19 @@ class Ghost {
     this.startPos = startPos;
     this.pos = startPos;
     this.dir = DIRECTIONS.ArrowRight;
+    this.baseSpeed = speed;
     this.speed = speed;
     this.timer = 0;
     this.isScared = false;
     this.rotation = false;
-    this.baseSpeed = speed; // Store the original speed
+    // Cache commonly used arrays
+    this.classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name];
+    this.classesToAdd = [OBJECT_TYPE.GHOST, this.name];
+    this.scaredClassesToAdd = [...this.classesToAdd, OBJECT_TYPE.SCARED];
   }
 
   shouldMove() {
-    // Slower movement when scared
     const currentSpeed = this.isScared ? this.baseSpeed * 2 : this.baseSpeed;
-    
     if (this.timer === currentSpeed) {
       this.timer = 0;
       return true;
@@ -50,30 +51,20 @@ class Ghost {
   }
 
   getNextMove(objectExist) {
-    const { nextMovePos, direction } = this.movement(
-      this.pos,
-      this.dir,
-      objectExist
-    );
-
-    // Only allow movement to valid positions
-    if (objectExist(nextMovePos, OBJECT_TYPE.WALL) || 
-        objectExist(nextMovePos, OBJECT_TYPE.GHOST)) {
-      return { nextMovePos: this.pos, direction: this.dir };
-    }
-
-    return { nextMovePos, direction };
+    const { nextMovePos, direction } = this.movement(this.pos, this.dir, objectExist);
+    return {
+      nextMovePos: objectExist(nextMovePos, OBJECT_TYPE.WALL) || 
+                   objectExist(nextMovePos, OBJECT_TYPE.GHOST) ? 
+                   this.pos : nextMovePos,
+      direction: direction || this.dir
+    };
   }
 
   makeMove() {
-    const classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name];
-    let classesToAdd = [OBJECT_TYPE.GHOST, this.name];
-
-    if (this.isScared) {
-      classesToAdd = [...classesToAdd, OBJECT_TYPE.SCARED];
-    }
-
-    return { classesToRemove, classesToAdd };
+    return {
+      classesToRemove: this.classesToRemove,
+      classesToAdd: this.isScared ? this.scaredClassesToAdd : this.classesToAdd
+    };
   }
 
   setNewPos(nextMovePos, direction) {

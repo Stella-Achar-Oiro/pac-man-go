@@ -1,3 +1,4 @@
+//index.js
 import { LEVEL, OBJECT_TYPE } from './setup.js';
 import Ghost, { randomMovement } from './ghost.js';
 // Classes
