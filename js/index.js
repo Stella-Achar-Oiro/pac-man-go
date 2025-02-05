@@ -56,6 +56,8 @@ function calculateFPS() {
 }
 
 function togglePause() {
+  if (!lives || gameWin) return; // Don't allow pause if game is over
+  
   gamePaused = !gamePaused;
   pauseMenu.classList.toggle('hide');
   
@@ -79,6 +81,9 @@ function gameOver(pacman, grid) {
     lives--;
     livesDisplay.textContent = `Lives: ${lives}`;
     resetLevel(pacman);
+    gamePaused = false;
+    pauseMenu.classList.add('hide');
+    requestAnimationFrame(() => gameLoop(pacman, ghostsInstances));
   } else {
     gameBoard.showGameStatus(gameWin);
     startButton.classList.remove('hide');
@@ -86,10 +91,12 @@ function gameOver(pacman, grid) {
   }
 }
 
+
 function resetLevel(pacman) {
   powerPillActive = false;
+  clearTimeout(powerPillTimer);
   
-  // Clear the board of existing characters
+  // Remove all existing game objects
   gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
   ghostsInstances.forEach(ghost => {
     gameBoard.removeObject(ghost.pos, [
@@ -99,23 +106,27 @@ function resetLevel(pacman) {
     ]);
   });
 
-  // Reset positions
-  pacman.pos = 287; // Starting position
+  // Reset Pacman
+  pacman.pos = 287;
+  pacman.dir = null;
+  pacman.timer = 0;
+  pacman.powerPill = false;
   gameBoard.addObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
   
+  // Reset all ghosts
   ghostsInstances.forEach(ghost => {
-    ghost.pos = ghost.startPos;
-    ghost.isScared = false;
+    ghost.resetPosition();
     gameBoard.addObject(ghost.pos, [OBJECT_TYPE.GHOST, ghost.name]);
   });
 
-  // Reset event listeners
+  // Re-add event listeners
+  document.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('keydown', pacman.handleKeyInput);
+  
+  document.addEventListener('keydown', handleKeydown);
   document.addEventListener('keydown', (e) =>
     pacman.handleKeyInput(e, gameBoard.objectExist.bind(gameBoard))
   );
-
-  requestAnimationFrame(() => gameLoop(pacman, ghostsInstances));
 }
 
 function checkCollision(pacman, ghosts) {
