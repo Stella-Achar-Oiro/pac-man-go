@@ -118,6 +118,8 @@ body {
   border: 4px solid #1919A6;
   margin: 20px 0;
   box-shadow: inset 0 0 20px rgba(25, 25, 166, 0.2);
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), var(--cell-size));
 }
 
 #game-stats {
