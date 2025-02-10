@@ -1,6 +1,6 @@
 //index.js
 import { LEVEL, OBJECT_TYPE } from './setup.js';
-import Ghost, { randomMovement } from './ghost.js';
+import Ghost, { calculateNextMove } from './ghost.js';
 // Classes
 import Board from './board.js';
 import Pacman from './pacman.js';
@@ -31,8 +31,8 @@ let animationFrameId = null;
 
 // Game constants
 const POWER_PILL_TIME = 10000; // ms
-const PACMAN_SPEED = 4; // Higher number = slower movement
-const GHOST_SPEED = 5; // Higher number = slower movement
+const PACMAN_SPEED = 8; // Higher number = slower movement
+const GHOST_SPEED = 25; // Higher number = slower movement
 const gameBoard = Board.createGameBoard(gameGrid, LEVEL);
 
 function updateTimer() {
@@ -155,6 +155,7 @@ function checkCollision(pacman, ghosts) {
   return false;
 }
 
+// index.js
 function gameLoop(pacman, ghosts) {
   if (!gamePaused) {
     performance.mark('frameStart');
@@ -168,8 +169,9 @@ function gameLoop(pacman, ghosts) {
     performance.mark('movePacmanEnd');
     performance.measure('Pacman Movement', 'movePacmanStart', 'movePacmanEnd');
 
-    // 2. Check Ghost collision on the old positions
+    // 2. Update ghosts with Pacman's new position and check collision
     performance.mark('collisionStart');
+    ghosts.forEach(ghost => ghost.updatePacmanPos(pacman.pos));
     if (checkCollision(pacman, ghosts)) return;
     performance.mark('collisionEnd');
     performance.measure('Collision Check', 'collisionStart', 'collisionEnd');
@@ -203,7 +205,13 @@ function gameLoop(pacman, ghosts) {
 
       clearTimeout(powerPillTimer);
       powerPillTimer = setTimeout(
-        () => (pacman.powerPill = false),
+        () => {
+          pacman.powerPill = false;
+          // When power pill expires, update ghost states
+          ghosts.forEach(ghost => {
+            ghost.isScared = false;
+          });
+        },
         POWER_PILL_TIME
       );
     }
@@ -211,7 +219,9 @@ function gameLoop(pacman, ghosts) {
     // 7. Change ghost scare mode depending on powerpill
     if (pacman.powerPill !== powerPillActive) {
       powerPillActive = pacman.powerPill;
-      ghosts.forEach((ghost) => (ghost.isScared = pacman.powerPill));
+      ghosts.forEach((ghost) => {
+        ghost.isScared = pacman.powerPill;
+      });
     }
 
     // 8. Check if all dots have been eaten
@@ -264,10 +274,10 @@ function startGame() {
   );
 
   ghostsInstances = [
-    new Ghost(GHOST_SPEED, 188, randomMovement, OBJECT_TYPE.BLINKY),
-    new Ghost(GHOST_SPEED + 1, 209, randomMovement, OBJECT_TYPE.PINKY),
-    new Ghost(GHOST_SPEED + 2, 230, randomMovement, OBJECT_TYPE.INKY),
-    new Ghost(GHOST_SPEED + 3, 251, randomMovement, OBJECT_TYPE.CLYDE)
+    new Ghost(GHOST_SPEED, 188, pacmanInstance.pos, calculateNextMove, OBJECT_TYPE.BLINKY),
+    new Ghost(GHOST_SPEED + 1, 209, pacmanInstance.pos, calculateNextMove, OBJECT_TYPE.PINKY),
+    new Ghost(GHOST_SPEED + 2, 230, pacmanInstance.pos, calculateNextMove, OBJECT_TYPE.INKY),
+    new Ghost(GHOST_SPEED + 3, 251, pacmanInstance.pos, calculateNextMove, OBJECT_TYPE.CLYDE)
   ];
 
   requestAnimationFrame(() => gameLoop(pacmanInstance, ghostsInstances));
