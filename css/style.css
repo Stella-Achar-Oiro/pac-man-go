@@ -211,6 +211,18 @@ body {
 }
 
 /* Ghost eyes */
+.ghost::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 2px;
+  right: 2px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+}
+
+/* Ghost eyes */
 .ghost-eyes {
   position: absolute;
   top: 6px;

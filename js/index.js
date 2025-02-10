@@ -1,4 +1,4 @@
-// index.js
+// index.js - Update the import paths
 import { LEVEL, OBJECT_TYPE, GHOST_MODES, GHOST_HOUSE, FRUITS } from './setup.js';
 import Ghost from './ghost.js';
 import GhostHouseController from './ghostHouseController.js';
@@ -33,8 +33,8 @@ let ghostComboCount = 0;
 
 // Game constants
 const POWER_PILL_TIME = 10000; // ms
-const PACMAN_SPEED = 8; // Higher number = slower movement
-const GHOST_SPEED = 10; // Higher number = slower movement
+const PACMAN_SPEED = 12; // Higher number = slower movement
+const GHOST_SPEED = 30; // Higher number = slower movement
 const gameBoard = Board.createGameBoard(gameGrid, LEVEL);
 
 function createFruitElement(type, score) {
@@ -239,16 +239,17 @@ function checkCollision(pacman, ghosts) {
 }
 
 function startGhostModes() {
-    ghostsInstances.forEach(ghost => {
-        if (ghost.modeTimer) {
-            clearTimeout(ghost.modeTimer);
-        }
-        ghost.setModeTimings(
-            currentLevel <= 1 ? GHOST_MODES.LEVEL_1 :
-            currentLevel <= 4 ? GHOST_MODES.LEVEL_2_4 :
-            GHOST_MODES.LEVEL_5_PLUS
-        );
-    });
+  const modeTimings = currentLevel <= 1 ? GHOST_MODES.LEVEL_1 :
+                     currentLevel <= 4 ? GHOST_MODES.LEVEL_2_4 :
+                     GHOST_MODES.LEVEL_5_PLUS;
+
+  ghostsInstances.forEach(ghost => {
+      // Clear any existing timers
+      if (ghost.modeTimer) {
+          clearTimeout(ghost.modeTimer);
+      }
+      ghost.setModeTimings(modeTimings);
+  });
 }
 
 function gameLoop(pacman, ghosts) {
@@ -359,6 +360,7 @@ function startGame() {
       OBJECT_TYPE.BLINKY,
       pacmanInstance
   );
+  console.log('Blinky created at:', blinky.pos);
 
   const pinky = new Ghost(
       GHOST_SPEED + 2,

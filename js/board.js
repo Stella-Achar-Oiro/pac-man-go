@@ -7,6 +7,7 @@ class Board {
     #totalDotsEaten = 0;
     #fruitTimer = null;
     #fruitPosition = null;
+    #ghostPositions = new Map();
 
     constructor(DOMGrid) {
         this.dotCount = 0;
@@ -31,21 +32,155 @@ class Board {
         return this.#fruitPosition;
     }
 
-    // Fruit management methods
+    createGrid(level) {
+        this.dotCount = 0;
+        this.grid = [];
+        this.DOMGrid.innerHTML = '';
+        
+        // Set CSS Grid properties
+        this.DOMGrid.style.setProperty('--grid-size', GRID_SIZE);
+        this.DOMGrid.style.setProperty('--cell-size', `${CELL_SIZE}px`);
+        this.DOMGrid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(${GRID_SIZE}, ${CELL_SIZE}px);
+            grid-template-rows: repeat(${GRID_SIZE}, ${CELL_SIZE}px);
+            gap: 0;
+        `;
+
+        // Create grid squares
+        level.forEach((square, index) => {
+            const div = document.createElement('div');
+            const squareType = CLASS_LIST[square];
+            
+            div.dataset.index = index;
+            div.className = `square ${squareType}`;
+            div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`;
+            
+            this.fragment.appendChild(div);
+            this.grid.push(div);
+            
+            if (squareType === OBJECT_TYPE.DOT) {
+                this.dotCount++;
+            }
+        });
+
+        this.DOMGrid.appendChild(this.fragment);
+        console.log('Grid created with', this.dotCount, 'dots');
+    }
+
+    addObject(pos, classes) {
+        if (this.isValidPosition(pos)) {
+            const square = this.grid[pos];
+            classes.forEach(className => {
+                square.classList.add(className);
+                
+                // Track ghost positions
+                if (className.includes('ghost')) {
+                    this.#ghostPositions.set(className, pos);
+                }
+            });
+            console.log(`Added ${classes.join(', ')} at position ${pos}`);
+        }
+    }
+
+    removeObject(pos, classes) {
+        if (this.isValidPosition(pos)) {
+            const square = this.grid[pos];
+            classes.forEach(className => {
+                square.classList.remove(className);
+                
+                // Update ghost tracking
+                if (className.includes('ghost')) {
+                    this.#ghostPositions.delete(className);
+                }
+            });
+            console.log(`Removed ${classes.join(', ')} from position ${pos}`);
+        }
+    }
+
+    objectExist(pos, object) {
+        return this.isValidPosition(pos) && this.grid[pos].classList.contains(object);
+    }
+
+    isValidPosition(pos) {
+        return pos >= 0 && pos < this.grid.length;
+    }
+
+    rotateDiv(pos, deg) {
+        if (this.isValidPosition(pos)) {
+            this.grid[pos].style.transform = `rotate(${deg}deg)`;
+        }
+    }
+
+    moveCharacter(character) {
+        if (!character.shouldMove()) return;
+
+        // Get next move
+        const { nextMovePos, direction } = character.getNextMove(this.boundObjectExist);
+        
+        // Log movement attempt
+        console.log(`${character.name || 'Pacman'} attempting move from ${character.pos} to ${nextMovePos}`);
+
+        // Validate move
+        if (!this.isValidPosition(nextMovePos)) {
+            console.log(`Invalid position ${nextMovePos}, staying at ${character.pos}`);
+            return;
+        }
+
+        // Check for collisions
+        if (this.objectExist(nextMovePos, OBJECT_TYPE.WALL)) {
+            console.log(`Wall collision detected at ${nextMovePos}`);
+            return;
+        }
+
+        // Get classes to update
+        const { classesToRemove, classesToAdd } = character.makeMove();
+
+        // Only move if position is changing
+        if (nextMovePos !== character.pos) {
+            // Handle dots for ghosts
+            if (character.name && this.grid[character.pos].hasAttribute('data-has-dot')) {
+                this.addObject(character.pos, [OBJECT_TYPE.DOT]);
+                this.grid[character.pos].removeAttribute('data-has-dot');
+            }
+
+            if (character.name && this.objectExist(nextMovePos, OBJECT_TYPE.DOT)) {
+                this.grid[nextMovePos].setAttribute('data-has-dot', 'true');
+                this.removeObject(nextMovePos, [OBJECT_TYPE.DOT]);
+            }
+
+            // Remove from current position
+            this.removeObject(character.pos, classesToRemove);
+            
+            // Add to new position
+            this.addObject(nextMovePos, classesToAdd);
+
+            // Handle rotation
+            if (character.rotation && direction) {
+                this.rotateDiv(nextMovePos, direction.rotation);
+                this.rotateDiv(character.pos, 0);
+            }
+
+            // Update character position
+            character.setNewPos(nextMovePos, direction);
+            
+            console.log(`${character.name || 'Pacman'} moved to ${nextMovePos}`);
+        } else {
+            console.log(`${character.name || 'Pacman'} stayed at ${character.pos}`);
+        }
+    }
+
     spawnFruit(fruitType, score) {
-        // Clear any existing fruit
         if (this.#currentFruit) {
             this.removeFruit();
         }
 
-        // Place fruit in the center of the maze
         this.#fruitPosition = 261; // Center position
         this.#currentFruit = { type: fruitType, score };
         
-        // Add fruit to the board
         this.addObject(this.#fruitPosition, [OBJECT_TYPE.FRUIT, fruitType]);
+        console.log(`Spawned ${fruitType} at position ${this.#fruitPosition}`);
 
-        // Set timer to remove fruit after 10 seconds
         this.#fruitTimer = setTimeout(() => this.removeFruit(), 10000);
     }
 
@@ -55,92 +190,18 @@ class Board {
             this.#currentFruit = null;
             this.#fruitPosition = null;
             clearTimeout(this.#fruitTimer);
+            console.log('Fruit removed');
         }
     }
 
     incrementDotsEaten() {
         this.#totalDotsEaten++;
+        console.log(`Dots eaten: ${this.#totalDotsEaten}`);
     }
 
     showGameStatus(gameWin) {
         this.gameStatusDiv.innerHTML = `${gameWin ? 'WIN!' : 'GAME OVER!'}`;
         this.DOMGrid.appendChild(this.gameStatusDiv);
-    }
-
-    createGrid(level) {
-        this.dotCount = 0;
-        this.grid = [];
-        this.DOMGrid.innerHTML = '';
-        this.DOMGrid.style.setProperty('--grid-size', GRID_SIZE);
-        this.DOMGrid.style.setProperty('--cell-size', `${CELL_SIZE}px`);
-
-        level.forEach((square) => {
-            const div = document.createElement('div');
-            const squareType = CLASS_LIST[square];
-            div.className = `square ${squareType}`;
-            div.style.cssText = `width: ${CELL_SIZE}px; height: ${CELL_SIZE}px;`;
-            this.fragment.appendChild(div);
-            this.grid.push(div);
-            if (squareType === OBJECT_TYPE.DOT) this.dotCount++;
-        });
-
-        this.DOMGrid.appendChild(this.fragment);
-    }
-
-    addObject(pos, classes) {
-        if (pos >= 0 && pos < this.grid.length) {
-            this.grid[pos].classList.add(...classes);
-        }
-    }
-
-    removeObject(pos, classes) {
-        if (pos >= 0 && pos < this.grid.length) {
-            this.grid[pos].classList.remove(...classes);
-        }
-    }
-
-    objectExist(pos, object) {
-        return pos >= 0 && pos < this.grid.length && this.grid[pos].classList.contains(object);
-    }
-
-    rotateDiv(pos, deg) {
-        if (pos >= 0 && pos < this.grid.length) {
-            this.grid[pos].style.transform = `rotate(${deg}deg)`;
-        }
-    }
-
-    moveCharacter(character) {
-        if (!character.shouldMove()) return;
-
-        const { nextMovePos, direction } = character.getNextMove(this.boundObjectExist);
-        const { classesToRemove, classesToAdd } = character.makeMove();
-
-        // Handle ghost movement
-        if (character.name) { // This is a ghost
-            // Check if moving onto a dot
-            if (this.objectExist(nextMovePos, OBJECT_TYPE.DOT)) {
-                this.grid[nextMovePos].setAttribute('data-has-dot', 'true');
-                this.removeObject(nextMovePos, [OBJECT_TYPE.DOT]);
-            }
-
-            // Check if leaving a dot
-            if (this.grid[character.pos].hasAttribute('data-has-dot')) {
-                this.addObject(character.pos, [OBJECT_TYPE.DOT]);
-                this.grid[character.pos].removeAttribute('data-has-dot');
-            }
-        }
-
-        // Handle rotation
-        if (character.rotation && nextMovePos !== character.pos && direction) {
-            this.rotateDiv(nextMovePos, direction.rotation);
-            this.rotateDiv(character.pos, 0);
-        }
-
-        // Move character
-        this.removeObject(character.pos, classesToRemove);
-        this.addObject(nextMovePos, classesToAdd);
-        
-        character.setNewPos(nextMovePos, direction);
     }
 
     static createGameBoard(DOMGrid, level) {
@@ -149,21 +210,16 @@ class Board {
         return board;
     }
 
-    getDotCount() {
-        return this.dotCount;
-    }
-
     resetGrid() {
-        // Clear all existing fruits
         this.removeFruit();
-        
-        // Reset dot count tracking
         this.#totalDotsEaten = 0;
+        this.#ghostPositions.clear();
         
-        // Clear any existing game status
         if (this.gameStatusDiv.parentNode) {
             this.gameStatusDiv.parentNode.removeChild(this.gameStatusDiv);
         }
+        
+        console.log('Grid reset');
     }
 
     getCurrentGridState() {
@@ -171,22 +227,35 @@ class Board {
             dotCount: this.dotCount,
             totalDotsEaten: this.#totalDotsEaten,
             hasFruit: this.#currentFruit !== null,
-            fruitPosition: this.#fruitPosition
+            fruitPosition: this.#fruitPosition,
+            ghostPositions: Object.fromEntries(this.#ghostPositions)
         };
     }
 
     cleanup() {
-        // Clear any running timers
         if (this.#fruitTimer) {
             clearTimeout(this.#fruitTimer);
         }
         
-        // Remove any existing fruits
         this.removeFruit();
-        
-        // Clear grid
+        this.#ghostPositions.clear();
         this.grid = [];
         this.DOMGrid.innerHTML = '';
+        
+        console.log('Board cleaned up');
+    }
+
+    // Debug helper method
+    printGridState() {
+        console.log('Current Grid State:');
+        console.log(`Dots remaining: ${this.dotCount}`);
+        console.log(`Total dots eaten: ${this.#totalDotsEaten}`);
+        console.log(`Ghost positions:`, Object.fromEntries(this.#ghostPositions));
+        console.log(`Has fruit:`, this.#currentFruit !== null);
+        if (this.#currentFruit) {
+            console.log(`Fruit type: ${this.#currentFruit.type}`);
+            console.log(`Fruit position: ${this.#fruitPosition}`);
+        }
     }
 }
 

@@ -1,66 +1,47 @@
-// ghost.js
-import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE, GHOST_MODES, GHOST_HOUSE, TUNNEL } from './setup.js';
-
-// Scatter mode corner targets for each ghost
-const SCATTER_TARGETS = {
-    [OBJECT_TYPE.BLINKY]: { x: GRID_SIZE - 1, y: 0 },         // Top-right corner
-    [OBJECT_TYPE.PINKY]: { x: 0, y: 0 },                      // Top-left corner
-    [OBJECT_TYPE.INKY]: { x: GRID_SIZE - 1, y: GRID_SIZE - 1 },  // Bottom-right corner
-    [OBJECT_TYPE.CLYDE]: { x: 0, y: GRID_SIZE - 1 }           // Bottom-left corner
-};
-
-// Calculate distance between two points on the grid
-function calculateDistance(posA, posB) {
-    const aX = posA % GRID_SIZE;
-    const aY = Math.floor(posA / GRID_SIZE);
-    const bX = posB % GRID_SIZE;
-    const bY = Math.floor(posB / GRID_SIZE);
-    return Math.abs(aX - bX) + Math.abs(aY - bY);
-}
-
-// Mode management functions
-function startScatterMode(ghost) {
-    ghost.mode = 'SCATTER';
-    ghost.modeStartTime = performance.now();
-    ghost.modeTimer = setTimeout(() => {
-        startChaseMode(ghost);
-    }, ghost.modeTimings.SCATTER[ghost.currentModeIndex]);
-}
-
-function startChaseMode(ghost) {
-    ghost.mode = 'CHASE';
-    ghost.modeStartTime = performance.now();
-    ghost.modeTimer = setTimeout(() => {
-        ghost.currentModeIndex++;
-        startScatterMode(ghost);
-    }, ghost.modeTimings.CHASE[ghost.currentModeIndex]);
-}
+import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE, GHOST_MODES, GHOST_HOUSE, TUNNEL, GHOST_BEHAVIOR } from './setup.js';
 
 class Ghost {
-    constructor(speed = 5, startPos, movement, name, pacman = null, blinky = null) {
+    constructor(speed, startPos, movement, name, pacman = null, blinky = null) {
         this.name = name;
         this.movement = movement;
         this.startPos = startPos;
         this.pos = startPos;
-        this.dir = DIRECTIONS.ArrowRight;
+        this.dir = this.isInHouse ? DIRECTIONS.ArrowUp : DIRECTIONS.ArrowLeft;
         this.speed = speed;
         this.timer = 0;
         this.isScared = false;
         this.rotation = false;
         this.pacman = pacman;
-        this.blinky = blinky; // Reference to Blinky for Inky's behavior
-        this.classesToRemove = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name];
-        this.classesToAdd = [OBJECT_TYPE.GHOST, this.name];
-        this.scaredClassesToAdd = [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name];
-        
-        // Mode and targeting properties
-        this.mode = 'SCATTER';  // Start in scatter mode
-        this.scatterTarget = this.getScatterTarget();
-        this.isInHouse = name !== OBJECT_TYPE.BLINKY; // All ghosts except Blinky start in house
-        this.modeTimer = null;
-        this.modeStartTime = performance.now();
+        this.blinky = blinky;
+
+        // Ghost state properties
+        this.mode = 'SCATTER';
+        this.isInHouse = name !== OBJECT_TYPE.BLINKY;
+        this.scatterTarget = GHOST_BEHAVIOR.SCATTER_TARGETS[name];
+        this.leaveHomeTimer = null;
         this.currentModeIndex = 0;
-        this.modeTimings = GHOST_MODES.LEVEL_1; // Default to level 1 timings
+        this.modeTimer = null;
+        this.modeTimings = null;
+
+        console.log(`${name} initialized at position ${startPos}`);
+        
+        // Initialize house exit timer if needed
+        if (this.isInHouse) {
+            this.setupHouseExit();
+        }
+    }
+
+    setupHouseExit() {
+        if (this.leaveHomeTimer) {
+            clearTimeout(this.leaveHomeTimer);
+        }
+        
+        this.leaveHomeTimer = setTimeout(() => {
+            console.log(`${this.name} leaving house`);
+            this.isInHouse = false;
+            this.pos = GHOST_HOUSE.EXIT;
+            this.dir = DIRECTIONS.ArrowLeft;
+        }, GHOST_BEHAVIOR.LEAVE_HOME_TIME[this.name]);
     }
 
     shouldMove() {
@@ -72,8 +53,172 @@ class Ghost {
         return true;
     }
 
-    getScatterTarget() {
-        return SCATTER_TARGETS[this.name] || { x: 0, y: 0 }; // Fallback to top-left corner
+    getNextMove(objectExist) {
+      if (!this.shouldMove()) {
+          return { nextMovePos: this.pos, direction: this.dir };
+      }
+  
+      let nextMovePos;
+      let direction;
+  
+      // Handle different states
+      if (this.isInHouse) {
+          // Move up and down in house
+          const currentY = Math.floor(this.pos / GRID_SIZE);
+          const houseTopY = Math.floor(GHOST_HOUSE.EXIT / GRID_SIZE);
+          
+          if (currentY <= houseTopY) {
+              direction = DIRECTIONS.ArrowDown;
+          } else {
+              direction = DIRECTIONS.ArrowUp;
+          }
+          nextMovePos = this.pos + direction.movement;
+          
+          // Validate house movement
+          if (objectExist(nextMovePos, OBJECT_TYPE.WALL)) {
+              nextMovePos = this.pos;
+          }
+      } else if (this.isScared) {
+          // Random movement when scared
+          const possibleMoves = Object.values(DIRECTIONS).filter(dir => {
+              const nextPos = this.pos + dir.movement;
+              return !objectExist(nextPos, OBJECT_TYPE.WALL) &&
+                     !objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR);
+          });
+          
+          direction = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+          nextMovePos = this.pos + direction.movement;
+      } else {
+          // Normal targeting behavior
+          const target = this.mode === 'SCATTER' ? this.scatterTarget : this.getChaseTarget();
+          ({ nextMovePos, direction } = this.calculateMove(target, objectExist));
+      }
+  
+      console.log(`${this.name} moving from ${this.pos} to ${nextMovePos}`);
+      return { nextMovePos, direction };
+    }
+
+    getHouseMove() {
+        const currentY = Math.floor(this.pos / GRID_SIZE);
+        const houseTopY = Math.floor(GHOST_HOUSE.EXIT / GRID_SIZE);
+        const direction = currentY <= houseTopY ? DIRECTIONS.ArrowDown : DIRECTIONS.ArrowUp;
+        const nextMovePos = this.pos + direction.movement;
+        
+        console.log(`${this.name} house movement: ${this.pos} -> ${nextMovePos}`);
+        return { nextMovePos, direction };
+    }
+
+    getScaredMove(objectExist) {
+        const possibleMoves = this.getValidMoves(objectExist);
+        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        const nextMovePos = this.pos + randomMove.movement;
+        
+        console.log(`${this.name} scared movement: ${this.pos} -> ${nextMovePos}`);
+        return { nextMovePos, direction: randomMove };
+    }
+
+    calculateMove(target, objectExist) {
+      const currentX = this.pos % GRID_SIZE;
+      const currentY = Math.floor(this.pos / GRID_SIZE);
+      
+      // Get all possible moves
+      const possibleMoves = Object.values(DIRECTIONS).filter(dir => {
+          const nextPos = this.pos + dir.movement;
+          return !objectExist(nextPos, OBJECT_TYPE.WALL) &&
+                 (!this.isInHouse && !objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR)) &&
+                 dir !== this.getOppositeDirection(this.dir);
+      });
+  
+      // If no moves available, stay in current position
+      if (possibleMoves.length === 0) {
+          return {
+              nextMovePos: this.pos,
+              direction: this.dir
+          };
+      }
+  
+      // Calculate distances for each possible move
+      const moveDistances = possibleMoves.map(move => {
+          const nextPos = this.pos + move.movement;
+          const nextX = nextPos % GRID_SIZE;
+          const nextY = Math.floor(nextPos / GRID_SIZE);
+          
+          // Use Manhattan distance
+          const distance = Math.abs(target.x - nextX) + Math.abs(target.y - nextY);
+          
+          return { move, distance };
+      });
+  
+      // Sort by distance and get the best move
+      moveDistances.sort((a, b) => a.distance - b.distance);
+      const bestMove = moveDistances[0].move;
+  
+      return {
+          nextMovePos: this.pos + bestMove.movement,
+          direction: bestMove
+      };
+  }
+
+    getValidMoves(objectExist) {
+        return Object.values(DIRECTIONS).filter(dir => {
+            const nextPos = this.pos + dir.movement;
+            // Prevent reversing direction unless it's the only option
+            const isReverse = dir === this.getOppositeDirection(this.dir);
+            return !objectExist(nextPos, OBJECT_TYPE.WALL) &&
+                   !objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR) &&
+                   (!isReverse || this.isOnlyOption(objectExist));
+        });
+    }
+
+    isOnlyOption(objectExist) {
+        return Object.values(DIRECTIONS).every(dir => {
+            if (dir === this.getOppositeDirection(this.dir)) return true;
+            const nextPos = this.pos + dir.movement;
+            return objectExist(nextPos, OBJECT_TYPE.WALL) ||
+                   objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR);
+        });
+    }
+
+    getOppositeDirection(dir) {
+        if (!dir) return null;
+        return {
+            [DIRECTIONS.ArrowLeft.movement]: DIRECTIONS.ArrowRight,
+            [DIRECTIONS.ArrowRight.movement]: DIRECTIONS.ArrowLeft,
+            [DIRECTIONS.ArrowUp.movement]: DIRECTIONS.ArrowDown,
+            [DIRECTIONS.ArrowDown.movement]: DIRECTIONS.ArrowUp
+        }[dir.movement] || null;
+    }
+
+    makeMove() {
+        return {
+            classesToRemove: [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name],
+            classesToAdd: this.isScared ? 
+                [OBJECT_TYPE.GHOST, OBJECT_TYPE.SCARED, this.name] :
+                [OBJECT_TYPE.GHOST, this.name]
+        };
+    }
+
+    setNewPos(nextMovePos, direction) {
+        this.pos = nextMovePos;
+        this.dir = direction;
+    }
+
+    resetPosition() {
+        console.log(`${this.name} resetting position`);
+        this.pos = this.startPos;
+        this.dir = DIRECTIONS.ArrowRight;
+        this.timer = 0;
+        this.isScared = false;
+        this.mode = 'SCATTER';
+        this.currentModeIndex = 0;
+        this.isInHouse = this.name !== OBJECT_TYPE.BLINKY;
+        
+        if (this.modeTimer) clearTimeout(this.modeTimer);
+        if (this.leaveHomeTimer) clearTimeout(this.leaveHomeTimer);
+        
+        if (this.isInHouse) {
+            this.setupHouseExit();
+        }
     }
 
     setModeTimings(timings) {
@@ -86,175 +231,104 @@ class Ghost {
         if (this.modeTimer) {
             clearTimeout(this.modeTimer);
         }
+
+        this.mode = this.mode === 'SCATTER' ? 'CHASE' : 'SCATTER';
+        console.log(`${this.name} changing to ${this.mode} mode`);
         
-        if (this.mode === 'SCATTER') {
-            startChaseMode(this);
-        } else {
-            startScatterMode(this);
-        }
+        const duration = this.mode === 'SCATTER' 
+            ? this.modeTimings.SCATTER[this.currentModeIndex]
+            : this.modeTimings.CHASE[this.currentModeIndex];
+
+        this.modeTimer = setTimeout(() => {
+            if (this.mode === 'CHASE' && 
+                this.currentModeIndex < this.modeTimings.SCATTER.length - 1) {
+                this.currentModeIndex++;
+            }
+            this.startNextMode();
+        }, duration);
     }
 
-    getNextMove(objectExist) {
-        if (this.isInHouse) {
-            return this.getHouseExit(objectExist);
-        }
-
-        if (this.isScared) {
-            return randomMovement(this.pos, this.dir, objectExist);
-        }
-
-        const target = this.mode === 'SCATTER' ? 
-            this.getScatterTarget() :
-            this.getChaseTarget();
-
-        return this.moveTowardsTarget(target, objectExist);
-    }
-
+    // Keep existing getChaseTarget method as is since it's working correctly
     getChaseTarget() {
+        const pacmanX = this.pacman.pos % GRID_SIZE;
+        const pacmanY = Math.floor(this.pacman.pos / GRID_SIZE);
+
         switch (this.name) {
             case OBJECT_TYPE.BLINKY:
-                return { 
-                    x: this.pacman.pos % GRID_SIZE,
-                    y: Math.floor(this.pacman.pos / GRID_SIZE)
-                };
-            case OBJECT_TYPE.PINKY:
-                // Target 4 tiles ahead of Pacman
-                const pacmanDir = this.pacman.dir?.movement || 0;
-                const targetPos = this.pacman.pos + (pacmanDir * 4);
+                return { x: pacmanX, y: pacmanY };
+
+            case OBJECT_TYPE.PINKY: {
+                let targetX = pacmanX;
+                let targetY = pacmanY;
+
+                if (this.pacman.dir) {
+                    const ahead = 4;
+                    switch (this.pacman.dir) {
+                        case DIRECTIONS.ArrowUp:
+                            targetY -= ahead;
+                            targetX -= ahead;
+                            break;
+                        case DIRECTIONS.ArrowDown:
+                            targetY += ahead;
+                            break;
+                        case DIRECTIONS.ArrowLeft:
+                            targetX -= ahead;
+                            break;
+                        case DIRECTIONS.ArrowRight:
+                            targetX += ahead;
+                            break;
+                    }
+                }
+                return { x: targetX, y: targetY };
+            }
+
+            case OBJECT_TYPE.INKY: {
+                if (!this.blinky) return this.scatterTarget;
+
+                let aheadX = pacmanX;
+                let aheadY = pacmanY;
+
+                if (this.pacman.dir) {
+                    const ahead = 2;
+                    switch (this.pacman.dir) {
+                        case DIRECTIONS.ArrowUp:
+                            aheadY -= ahead;
+                            aheadX -= ahead;
+                            break;
+                        case DIRECTIONS.ArrowDown:
+                            aheadY += ahead;
+                            break;
+                        case DIRECTIONS.ArrowLeft:
+                            aheadX -= ahead;
+                            break;
+                        case DIRECTIONS.ArrowRight:
+                            aheadX += ahead;
+                            break;
+                    }
+                }
+
+                const blinkyX = this.blinky.pos % GRID_SIZE;
+                const blinkyY = Math.floor(this.blinky.pos / GRID_SIZE);
+
                 return {
-                    x: targetPos % GRID_SIZE,
-                    y: Math.floor(targetPos / GRID_SIZE)
+                    x: aheadX + (aheadX - blinkyX),
+                    y: aheadY + (aheadY - blinkyY)
                 };
-            case OBJECT_TYPE.INKY:
-                // Complex Inky targeting using Blinky's position
-                const blinkyPos = this.blinky?.pos || this.pos;
-                const twoAheadOfPacman = this.pacman.pos + (this.pacman.dir?.movement || 0) * 2;
-                const intermediateX = twoAheadOfPacman % GRID_SIZE;
-                const intermediateY = Math.floor(twoAheadOfPacman / GRID_SIZE);
-                const blinkyX = blinkyPos % GRID_SIZE;
-                const blinkyY = Math.floor(blinkyPos / GRID_SIZE);
-                
-                return {
-                    x: intermediateX + (intermediateX - blinkyX),
-                    y: intermediateY + (intermediateY - blinkyY)
-                };
-            case OBJECT_TYPE.CLYDE:
-                // If far from Pacman (>8 tiles), chase directly; if close, go to scatter corner
-                const distance = calculateDistance(this.pos, this.pacman.pos);
-                return distance > 8 ? {
-                    x: this.pacman.pos % GRID_SIZE,
-                    y: Math.floor(this.pacman.pos / GRID_SIZE)
-                } : this.getScatterTarget();
+            }
+
+            case OBJECT_TYPE.CLYDE: {
+                const distance = Math.sqrt(
+                    Math.pow(pacmanX - (this.pos % GRID_SIZE), 2) +
+                    Math.pow(pacmanY - Math.floor(this.pos / GRID_SIZE), 2)
+                );
+
+                return distance > 8 ? { x: pacmanX, y: pacmanY } : this.scatterTarget;
+            }
+
             default:
-                return this.getScatterTarget();
+                return this.scatterTarget;
         }
     }
-
-    getHouseExit(objectExist) {
-        const exitPos = GHOST_HOUSE.EXIT;
-        return this.moveTowardsTarget({
-            x: exitPos % GRID_SIZE,
-            y: Math.floor(exitPos / GRID_SIZE)
-        }, objectExist);
-    }
-
-    moveTowardsTarget(target, objectExist) {
-      const dirs = Object.values(DIRECTIONS);
-      let bestDirection = this.dir;
-      let shortestDistance = Infinity;
-  
-      // Consider each possible direction
-      for (const dir of dirs) {
-          let nextPos = this.pos + dir.movement;
-  
-          // Handle tunnel movement
-          if (this.pos === TUNNEL.LEFT_ENTRY && dir === DIRECTIONS.ArrowLeft) {
-              nextPos = TUNNEL.RIGHT_ENTRY;
-          } else if (this.pos === TUNNEL.RIGHT_ENTRY && dir === DIRECTIONS.ArrowRight) {
-              nextPos = TUNNEL.LEFT_ENTRY;
-          }
-          
-          // Skip invalid moves (walls, ghost house when not needed)
-          if (objectExist(nextPos, OBJECT_TYPE.WALL) || 
-              (!this.isInHouse && objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR))) {
-              continue;
-          }
-  
-          const newX = nextPos % GRID_SIZE;
-          const newY = Math.floor(nextPos / GRID_SIZE);
-          const distance = Math.abs(target.x - newX) + Math.abs(target.y - newY);
-  
-          // Update best direction if this move gets us closer to target
-          if (distance < shortestDistance) {
-              shortestDistance = distance;
-              bestDirection = dir;
-          }
-      }
-  
-      // Handle tunnel movement for final position
-      let nextMovePos = this.pos + bestDirection.movement;
-      if (this.pos === TUNNEL.LEFT_ENTRY && bestDirection === DIRECTIONS.ArrowLeft) {
-          nextMovePos = TUNNEL.RIGHT_ENTRY;
-      } else if (this.pos === TUNNEL.RIGHT_ENTRY && bestDirection === DIRECTIONS.ArrowRight) {
-          nextMovePos = TUNNEL.LEFT_ENTRY;
-      }
-  
-      return {
-          nextMovePos,
-          direction: bestDirection
-      };
-  }
-
-    makeMove() {
-        return {
-            classesToRemove: this.classesToRemove,
-            classesToAdd: this.isScared ? this.scaredClassesToAdd : this.classesToAdd
-        };
-    }
-
-    setNewPos(nextMovePos, direction) {
-        this.pos = nextMovePos;
-        this.dir = direction;
-    }
-
-    resetPosition() {
-        this.pos = this.startPos;
-        this.dir = DIRECTIONS.ArrowRight;
-        this.timer = 0;
-        this.isScared = false;
-        this.mode = 'SCATTER';
-        this.currentModeIndex = 0;
-        if (this.modeTimer) {
-            clearTimeout(this.modeTimer);
-        }
-        startScatterMode(this);
-    }
-
-    setPacman(pacman) {
-        this.pacman = pacman;
-    }
-}
-
-// Random movement for scared ghosts
-function randomMovement(position, direction, objectExist) {
-    const dirs = Object.values(DIRECTIONS);
-    let nextMovePos;
-    let dir = direction;
-    let attempts = 0;
-    
-    do {
-        dir = dirs[Math.floor(Math.random() * dirs.length)];
-        nextMovePos = position + dir.movement;
-        attempts++;
-        if (attempts > 10) return { nextMovePos: position, direction };
-    } while (
-        objectExist(nextMovePos, OBJECT_TYPE.WALL) ||
-        objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR) ||
-        nextMovePos === TUNNEL.LEFT_ENTRY ||
-        nextMovePos === TUNNEL.RIGHT_ENTRY
-    );
-
-    return { nextMovePos, direction: dir };
 }
 
 export default Ghost;
