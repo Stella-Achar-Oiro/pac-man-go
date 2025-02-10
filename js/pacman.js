@@ -1,5 +1,5 @@
 // pacman.js
-import { OBJECT_TYPE, DIRECTIONS } from './setup.js';
+import { OBJECT_TYPE, DIRECTIONS, TUNNEL } from './setup.js';
 
 class Pacman {
     constructor(speed, startPos) {
@@ -33,9 +33,16 @@ class Pacman {
         if (this.dir === null) {
             return { nextMovePos: this.pos, direction: this.dir };
         }
-
+    
         let nextMovePos = this.pos + this.dir.movement;
-
+    
+        // Handle tunnel movement
+        if (this.pos === TUNNEL.LEFT_ENTRY && this.dir === DIRECTIONS.ArrowLeft) {
+            nextMovePos = TUNNEL.RIGHT_ENTRY;
+        } else if (this.pos === TUNNEL.RIGHT_ENTRY && this.dir === DIRECTIONS.ArrowRight) {
+            nextMovePos = TUNNEL.LEFT_ENTRY;
+        }
+    
         // First try the requested direction if it exists
         if (this.requestedDir !== null) {
             const requestedNextMovePos = this.pos + this.requestedDir.movement;
@@ -46,15 +53,16 @@ class Pacman {
                 nextMovePos = requestedNextMovePos;
             }
         }
-
+    
         // Check if next move is possible, if not stay in current position
         if (objectExist(nextMovePos, OBJECT_TYPE.WALL) || 
             objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR)) {
             nextMovePos = this.pos;
         }
-
+    
         return { nextMovePos, direction: this.dir };
     }
+    
 
     makeMove() {
         const classesToRemove = [OBJECT_TYPE.PACMAN];
