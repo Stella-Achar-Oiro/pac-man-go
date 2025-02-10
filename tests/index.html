@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Pac-Man Test Suite</title>
+    <style>
+        .test-results {
+            background: #000;
+            color: #ffff00;
+            font-family: monospace;
+            padding: 20px;
+            margin: 20px;
+            border: 2px solid #1919A6;
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .test-control {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border: 2px solid #1919A6;
+            z-index: 1000;
+        }
+        .test-log {
+            height: 200px;
+            overflow-y: auto;
+            background: #111;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        button {
+            background: #000;
+            color: #ffff00;
+            border: 2px solid #ffff00;
+            padding: 8px 16px;
+            margin: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #ffff00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Copy your entire original game HTML here -->
+    <div id="wrapper">
+      <h1 class="game-title">PAC-MAN</h1>
+      <div id="game-container">
+        <div class="game-section">
+          <div id="game-stats">
+            <div id="timer">Time: 0s</div>
+            <div id="score">Score: 0</div>
+            <div id="lives">Lives: 3</div>
+            <div id="fps">FPS: 0</div>
+          </div>
+          <div id="game">
+            <div class="ready hide">Ready!</div>
+          </div>
+        </div>
+        <div class="instructions-section">
+          <div class="instructions-panel">
+            <h2>How to Play</h2>
+            <div class="controls">
+              <h3>Controls</h3>
+              <ul>
+                <li>↑ Move Up</li>
+                <li>↓ Move Down</li>
+                <li>← Move Left</li>
+                <li>→ Move Right</li>
+                <li>ESC Pause Game</li>
+              </ul>
+            </div>
+            <div class="scoring">
+              <h3>Scoring</h3>
+              <ul>
+                <li>• Dot: 10 points</li>
+                <li>• Power Pill: 50 points</li>
+                <li>• Ghost: 100 points</li>
+              </ul>
+            </div>
+            <div class="characters">
+              <h3>Characters</h3>
+              <div class="character-list">
+                <div class="character-item">
+                  <div class="ghost blinky"></div>
+                  <span>Blinky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost pinky"></div>
+                  <span>Pinky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost inky"></div>
+                  <span>Inky</span>
+                </div>
+                <div class="character-item">
+                  <div class="ghost clyde"></div>
+                  <span>Clyde</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="pause-menu" class="hide">
+        <h2>Game Paused</h2>
+        <button id="continue-button">Continue</button>
+        <button id="restart-button">Restart</button>
+      </div>
+      <button id="start-button">Start Game</button>
+    </div>
+
+    <!-- Test controls -->
+    <div class="test-control">
+        <button id="run-tests">Run All Tests</button>
+        <button id="toggle-results">Toggle Results</button>
+        <div class="test-log" id="test-log"></div>
+    </div>
+
+    <!-- Test results container -->
+    <div class="test-results" id="test-results"></div>
+
+    <!-- Game Scripts -->
+    <script type="module" src="../js/index.js"></script>
+    <!-- Test Scripts -->
+    <script type="module" src="./testRunner.js"></script>
+</body>
+</html>
