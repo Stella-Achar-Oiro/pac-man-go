@@ -1,5 +1,5 @@
 // ghost.js
-import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE, GHOST_MODES, GHOST_HOUSE } from './setup.js';
+import { DIRECTIONS, OBJECT_TYPE, GRID_SIZE, GHOST_MODES, GHOST_HOUSE, TUNNEL } from './setup.js';
 
 // Scatter mode corner targets for each ghost
 const SCATTER_TARGETS = {
@@ -159,36 +159,51 @@ class Ghost {
     }
 
     moveTowardsTarget(target, objectExist) {
-        const dirs = Object.values(DIRECTIONS);
-        let bestDirection = this.dir;
-        let shortestDistance = Infinity;
-
-        // Consider each possible direction
-        for (const dir of dirs) {
-            const nextPos = this.pos + dir.movement;
-            
-            // Skip invalid moves (walls, ghost house when not needed)
-            if (objectExist(nextPos, OBJECT_TYPE.WALL) || 
-                (!this.isInHouse && objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR))) {
-                continue;
-            }
-
-            const newX = nextPos % GRID_SIZE;
-            const newY = Math.floor(nextPos / GRID_SIZE);
-            const distance = Math.abs(target.x - newX) + Math.abs(target.y - newY);
-
-            // Update best direction if this move gets us closer to target
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                bestDirection = dir;
-            }
-        }
-
-        return {
-            nextMovePos: this.pos + bestDirection.movement,
-            direction: bestDirection
-        };
-    }
+      const dirs = Object.values(DIRECTIONS);
+      let bestDirection = this.dir;
+      let shortestDistance = Infinity;
+  
+      // Consider each possible direction
+      for (const dir of dirs) {
+          let nextPos = this.pos + dir.movement;
+  
+          // Handle tunnel movement
+          if (this.pos === TUNNEL.LEFT_ENTRY && dir === DIRECTIONS.ArrowLeft) {
+              nextPos = TUNNEL.RIGHT_ENTRY;
+          } else if (this.pos === TUNNEL.RIGHT_ENTRY && dir === DIRECTIONS.ArrowRight) {
+              nextPos = TUNNEL.LEFT_ENTRY;
+          }
+          
+          // Skip invalid moves (walls, ghost house when not needed)
+          if (objectExist(nextPos, OBJECT_TYPE.WALL) || 
+              (!this.isInHouse && objectExist(nextPos, OBJECT_TYPE.GHOSTLAIR))) {
+              continue;
+          }
+  
+          const newX = nextPos % GRID_SIZE;
+          const newY = Math.floor(nextPos / GRID_SIZE);
+          const distance = Math.abs(target.x - newX) + Math.abs(target.y - newY);
+  
+          // Update best direction if this move gets us closer to target
+          if (distance < shortestDistance) {
+              shortestDistance = distance;
+              bestDirection = dir;
+          }
+      }
+  
+      // Handle tunnel movement for final position
+      let nextMovePos = this.pos + bestDirection.movement;
+      if (this.pos === TUNNEL.LEFT_ENTRY && bestDirection === DIRECTIONS.ArrowLeft) {
+          nextMovePos = TUNNEL.RIGHT_ENTRY;
+      } else if (this.pos === TUNNEL.RIGHT_ENTRY && bestDirection === DIRECTIONS.ArrowRight) {
+          nextMovePos = TUNNEL.LEFT_ENTRY;
+      }
+  
+      return {
+          nextMovePos,
+          direction: bestDirection
+      };
+  }
 
     makeMove() {
         return {
@@ -234,7 +249,9 @@ function randomMovement(position, direction, objectExist) {
         if (attempts > 10) return { nextMovePos: position, direction };
     } while (
         objectExist(nextMovePos, OBJECT_TYPE.WALL) ||
-        objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR)
+        objectExist(nextMovePos, OBJECT_TYPE.GHOSTLAIR) ||
+        nextMovePos === TUNNEL.LEFT_ENTRY ||
+        nextMovePos === TUNNEL.RIGHT_ENTRY
     );
 
     return { nextMovePos, direction: dir };

@@ -103,7 +103,12 @@ export const CLASS_LIST = Object.freeze([
   OBJECT_TYPE.GHOSTLAIR
 ]);
 
-// Game level layout
+export const TUNNEL = {
+  LEFT_ENTRY: 180,    // Position 180 (row 9, column 0)
+  RIGHT_ENTRY: 199,   // Position 199 (row 9, column 19)
+};
+
+//  LEVEL array to with tunnels
 // prettier-ignore
 export const LEVEL = [
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -115,7 +120,7 @@ export const LEVEL = [
   1, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1,
   1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1,
   1, 1, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1, 1,
-  1, 2, 2, 2, 2, 2, 2, 1, 9, 9, 9, 9, 1, 2, 2, 2, 2, 2, 2, 1,
+  0, 2, 2, 2, 2, 2, 2, 1, 9, 9, 9, 9, 1, 2, 2, 2, 2, 2, 2, 0, 
   1, 1, 1, 1, 2, 1, 2, 1, 9, 9, 9, 9, 1, 2, 1, 2, 1, 1, 1, 1,
   1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1,
   1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1,
