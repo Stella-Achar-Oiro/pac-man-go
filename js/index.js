@@ -10,7 +10,6 @@ const gameGrid = document.querySelector('#game');
 const timerDisplay = document.querySelector('#timer');
 const scoreDisplay = document.querySelector('#score');
 const livesDisplay = document.querySelector('#lives');
-const fpsDisplay = document.querySelector('#fps');
 const startButton = document.querySelector('#start-button');
 const pauseMenu = document.querySelector('#pause-menu');
 const continueButton = document.querySelector('#continue-button');
@@ -20,9 +19,6 @@ const restartButton = document.querySelector('#restart-button');
 let gameStartTime = 0;
 let gamePaused = false;
 let lives = 3;
-let frameCount = 0;
-let lastTime = performance.now();
-let fps = 0;
 let score = 0;
 let gameWin = false;
 let powerPillActive = false;
@@ -137,29 +133,15 @@ function updateTimer() {
     }
 }
 
-function calculateFPS() {
-    frameCount++;
-    const currentTime = performance.now();
-    const deltaTime = currentTime - lastTime;
-
-    if (deltaTime >= 1000) {
-        fps = Math.round((frameCount * 1000) / deltaTime);
-        frameCount = 0;
-        lastTime = currentTime;
-        fpsDisplay.textContent = `FPS: ${fps}`;
-    }
-}
-
 function togglePause() {
-    if (!lives || gameWin) return;
-    
-    gamePaused = !gamePaused;
-    pauseMenu.classList.toggle('hide');
-    
-    if (!gamePaused) {
-        lastTime = performance.now();
-        requestAnimationFrame(() => gameLoop(pacmanInstance, ghostsInstances));
-    }
+  if (!lives || gameWin) return;
+  
+  gamePaused = !gamePaused;
+  pauseMenu.classList.toggle('hide');
+  
+  if (!gamePaused) {
+      requestAnimationFrame(() => gameLoop(pacmanInstance, ghostsInstances));
+  }
 }
 
 function handleKeydown(e) {
@@ -270,175 +252,163 @@ function startGhostModes() {
 }
 
 function gameLoop(pacman, ghosts) {
-    if (!gamePaused) {
-        performance.mark('frameStart');
-        
-        calculateFPS();
-        updateTimer();
-        
-        // Move Pacman
-        gameBoard.moveCharacter(pacman);
+  if (!gamePaused) {
+      updateTimer();
+      
+      // Move Pacman
+      gameBoard.moveCharacter(pacman);
 
-        // Check Ghost collision
-        if (checkCollision(pacman, ghosts)) return;
+      // Check Ghost collision
+      if (checkCollision(pacman, ghosts)) return;
 
-        // Move ghosts
-        ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
+      // Move ghosts
+      ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
 
-        // Do a new ghost collision check
-        if (checkCollision(pacman, ghosts)) return;
+      // Do a new ghost collision check
+      if (checkCollision(pacman, ghosts)) return;
 
-        // Check if Pacman eats a dot
-        if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
-            gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.DOT]);
-            gameBoard.dotCount--;
-            score += 10;
-            scoreDisplay.textContent = `Score: ${score}`;
-            showPoints(pacman.pos, 10);
-            
-            // Handle ghost releases
-            ghostHouseController.handleDotEaten();
-            
-            // Check fruit spawn conditions - spawn at 70 and 170 dots remaining
-            if (!currentFruit && (gameBoard.dotCount === 70 || gameBoard.dotCount === 170)) {
-                spawnFruit();
-            }
-        }
-        
-        // Check if Pacman eats a fruit
-        if (currentFruit && pacman.pos === currentFruit.position) {
-            score += currentFruit.score;
-            showPoints(currentFruit.position, currentFruit.score);
-            scoreDisplay.textContent = `Score: ${score}`;
-            removeFruit();
-        }
+      // Check if Pacman eats a dot
+      if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
+          gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.DOT]);
+          gameBoard.dotCount--;
+          score += 10;
+          scoreDisplay.textContent = `Score: ${score}`;
+          showPoints(pacman.pos, 10);
+          
+          // Handle ghost releases
+          ghostHouseController.handleDotEaten();
+          
+          // Check fruit spawn conditions - spawn at 70 and 170 dots remaining
+          if (!currentFruit && (gameBoard.dotCount === 70 || gameBoard.dotCount === 170)) {
+              spawnFruit();
+          }
+      }
+      
+      // Check if Pacman eats a fruit
+      if (currentFruit && pacman.pos === currentFruit.position) {
+          score += currentFruit.score;
+          showPoints(currentFruit.position, currentFruit.score);
+          scoreDisplay.textContent = `Score: ${score}`;
+          removeFruit();
+      }
 
-        // Check if Pacman eats a power pill
-        if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.PILL)) {
-            gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PILL]);
-            pacman.powerPill = true;
-            ghostComboCount = 0;
-            score += 50;
-            scoreDisplay.textContent = `Score: ${score}`;
-            showPoints(pacman.pos, 50);
+      // Check if Pacman eats a power pill
+      if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.PILL)) {
+          gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PILL]);
+          pacman.powerPill = true;
+          ghostComboCount = 0;
+          score += 50;
+          scoreDisplay.textContent = `Score: ${score}`;
+          showPoints(pacman.pos, 50);
 
-            clearTimeout(powerPillTimer);
-            powerPillTimer = setTimeout(() => {
-                pacman.powerPill = false;
-                ghostComboCount = 0;
-            }, POWER_PILL_TIME);
-        }
+          clearTimeout(powerPillTimer);
+          powerPillTimer = setTimeout(() => {
+              pacman.powerPill = false;
+              ghostComboCount = 0;
+          }, POWER_PILL_TIME);
+      }
 
-        // Change ghost scare mode
-        if (pacman.powerPill !== powerPillActive) {
-            powerPillActive = pacman.powerPill;
-            ghosts.forEach((ghost) => (ghost.isScared = pacman.powerPill));
-        }
+      // Change ghost scare mode
+      if (pacman.powerPill !== powerPillActive) {
+          powerPillActive = pacman.powerPill;
+          ghosts.forEach((ghost) => (ghost.isScared = pacman.powerPill));
+      }
 
-        // Check if all dots have been eaten
-        if (gameBoard.dotCount === 0) {
-            gameWin = true;
-            gameOver(pacman, gameGrid);
-        }
-
-        performance.mark('frameEnd');
-        performance.measure('Full Frame', 'frameStart', 'frameEnd');
-    }
-    
-    animationFrameId = requestAnimationFrame(() => gameLoop(pacman, ghostsInstances));
+      // Check if all dots have been eaten
+      if (gameBoard.dotCount === 0) {
+          gameWin = true;
+          gameOver(pacman, gameGrid);
+      }
+  }
+  
+  animationFrameId = requestAnimationFrame(() => gameLoop(pacman, ghostsInstances));
 }
 
 let pacmanInstance;
 let ghostsInstances;
 
 function startGame() {
-    performance.clearMarks();
-    performance.clearMeasures();
-    
-    gameWin = false;
-    gamePaused = false;
-    powerPillActive = false;
-    score = 0;
-    lives = 3;
-    frameCount = 0;
-    lastTime = performance.now();
-    gameStartTime = performance.now();
-    fps = 0;
-    currentLevel = 1;
-    ghostComboCount = 0;
+  gameWin = false;
+  gamePaused = false;
+  powerPillActive = false;
+  score = 0;
+  lives = 3;
+  gameStartTime = performance.now();
+  currentLevel = 1;
+  ghostComboCount = 0;
 
-    // Reset displays
-    scoreDisplay.textContent = `Score: ${score}`;
-    livesDisplay.textContent = `Lives: ${lives}`;
-    timerDisplay.textContent = 'Time: 0s';
-    
-    startButton.classList.add('hide');
-    pauseMenu.classList.add('hide');
+  // Reset displays
+  scoreDisplay.textContent = `Score: ${score}`;
+  livesDisplay.textContent = `Lives: ${lives}`;
+  timerDisplay.textContent = 'Time: 0s';
+  
+  startButton.classList.add('hide');
+  pauseMenu.classList.add('hide');
 
-    gameBoard.createGrid(LEVEL);
+  gameBoard.createGrid(LEVEL);
 
-    // Create Pacman
-    pacmanInstance = new Pacman(PACMAN_SPEED, 287);
-    gameBoard.addObject(287, [OBJECT_TYPE.PACMAN]);
+  // Create Pacman
+  pacmanInstance = new Pacman(PACMAN_SPEED, 287);
+  gameBoard.addObject(287, [OBJECT_TYPE.PACMAN]);
 
-    // Create ghosts
-    const blinky = new Ghost(
-        GHOST_SPEED,
-        GHOST_HOUSE.BLINKY_START,
-        'blinkyBehavior',
-        OBJECT_TYPE.BLINKY,
-        pacmanInstance
-    );
+  // Create ghosts
+  const blinky = new Ghost(
+      GHOST_SPEED,
+      GHOST_HOUSE.BLINKY_START,
+      'blinkyBehavior',
+      OBJECT_TYPE.BLINKY,
+      pacmanInstance
+  );
 
-    const pinky = new Ghost(
-        GHOST_SPEED + 1,
-        GHOST_HOUSE.PINKY_START,
-        'pinkyBehavior',
-        OBJECT_TYPE.PINKY,
-        pacmanInstance
-    );
+  const pinky = new Ghost(
+      GHOST_SPEED + 2,
+      GHOST_HOUSE.PINKY_START,
+      'pinkyBehavior',
+      OBJECT_TYPE.PINKY,
+      pacmanInstance
+  );
 
-    const inky = new Ghost(
-        GHOST_SPEED + 2,
-        GHOST_HOUSE.INKY_START,
-        'inkyBehavior',
-        OBJECT_TYPE.INKY,
-        pacmanInstance,
-        blinky
-    );
+  const inky = new Ghost(
+      GHOST_SPEED + 4,
+      GHOST_HOUSE.INKY_START,
+      'inkyBehavior',
+      OBJECT_TYPE.INKY,
+      pacmanInstance,
+      blinky
+  );
 
-    const clyde = new Ghost(
-        GHOST_SPEED + 3,
-        GHOST_HOUSE.CLYDE_START,
-        'clydeBehavior',
-        OBJECT_TYPE.CLYDE,
-        pacmanInstance
-    );
+  const clyde = new Ghost(
+      GHOST_SPEED + 6,
+      GHOST_HOUSE.CLYDE_START,
+      'clydeBehavior',
+      OBJECT_TYPE.CLYDE,
+      pacmanInstance
+  );
 
-    ghostsInstances = [blinky, pinky, inky, clyde];
-    
-    // Initialize controllers
-    ghostHouseController = new GhostHouseController(ghostsInstances);
-    
-    // Add ghosts to the board based on their initial states
-    ghostsInstances.forEach(ghost => {
-        if (ghost.name === OBJECT_TYPE.BLINKY) {
-            gameBoard.addObject(ghost.pos, [OBJECT_TYPE.GHOST, ghost.name]);
-        } else {
-            gameBoard.addObject(ghost.pos, [OBJECT_TYPE.GHOST, OBJECT_TYPE.GHOSTLAIR, ghost.name]);
-        }
-    });
+  ghostsInstances = [blinky, pinky, inky, clyde];
+  
+  // Initialize controllers
+  ghostHouseController = new GhostHouseController(ghostsInstances);
+  
+  // Add ghosts to the board based on their initial states
+  ghostsInstances.forEach(ghost => {
+      if (ghost.name === OBJECT_TYPE.BLINKY) {
+          gameBoard.addObject(ghost.pos, [OBJECT_TYPE.GHOST, ghost.name]);
+      } else {
+          gameBoard.addObject(ghost.pos, [OBJECT_TYPE.GHOST, OBJECT_TYPE.GHOSTLAIR, ghost.name]);
+      }
+  });
 
-    startGhostModes();
+  startGhostModes();
 
-    // Add event listeners
-    document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('keydown', (e) =>
-        pacmanInstance.handleKeyInput(e, gameBoard.objectExist.bind(gameBoard))
-    );
+  // Add event listeners
+  document.addEventListener('keydown', handleKeydown);
+  document.addEventListener('keydown', (e) =>
+      pacmanInstance.handleKeyInput(e, gameBoard.objectExist.bind(gameBoard))
+  );
 
-    // Start game loop
-    requestAnimationFrame(() => gameLoop(pacmanInstance, ghostsInstances));
+  // Start game loop
+  requestAnimationFrame(() => gameLoop(pacmanInstance, ghostsInstances));
 }
 
 // Initialize game

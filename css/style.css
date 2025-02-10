@@ -124,7 +124,7 @@ body {
 
 #game-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   width: 100%;
   gap: 15px;
   margin-bottom: 20px;
