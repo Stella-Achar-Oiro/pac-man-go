@@ -1,6 +1,13 @@
-import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST } from './setup.js';
+// board.js
+import { GRID_SIZE, CELL_SIZE, OBJECT_TYPE, CLASS_LIST, FRUITS } from './setup.js';
 
 class Board {
+    // Private fields
+    #currentFruit = null;
+    #totalDotsEaten = 0;
+    #fruitTimer = null;
+    #fruitPosition = null;
+
     constructor(DOMGrid) {
         this.dotCount = 0;
         this.grid = [];
@@ -9,6 +16,50 @@ class Board {
         this.gameStatusDiv.classList.add('game-status');
         this.fragment = document.createDocumentFragment();
         this.boundObjectExist = this.objectExist.bind(this);
+    }
+
+    // Getters for private fields
+    get currentFruit() {
+        return this.#currentFruit;
+    }
+
+    get totalDotsEaten() {
+        return this.#totalDotsEaten;
+    }
+
+    get fruitPosition() {
+        return this.#fruitPosition;
+    }
+
+    // Fruit management methods
+    spawnFruit(fruitType, score) {
+        // Clear any existing fruit
+        if (this.#currentFruit) {
+            this.removeFruit();
+        }
+
+        // Place fruit in the center of the maze
+        this.#fruitPosition = 261; // Center position
+        this.#currentFruit = { type: fruitType, score };
+        
+        // Add fruit to the board
+        this.addObject(this.#fruitPosition, [OBJECT_TYPE.FRUIT, fruitType]);
+
+        // Set timer to remove fruit after 10 seconds
+        this.#fruitTimer = setTimeout(() => this.removeFruit(), 10000);
+    }
+
+    removeFruit() {
+        if (this.#currentFruit && this.#fruitPosition !== null) {
+            this.removeObject(this.#fruitPosition, [OBJECT_TYPE.FRUIT, this.#currentFruit.type]);
+            this.#currentFruit = null;
+            this.#fruitPosition = null;
+            clearTimeout(this.#fruitTimer);
+        }
+    }
+
+    incrementDotsEaten() {
+        this.#totalDotsEaten++;
     }
 
     showGameStatus(gameWin) {
@@ -77,11 +128,6 @@ class Board {
                 this.addObject(character.pos, [OBJECT_TYPE.DOT]);
                 this.grid[character.pos].removeAttribute('data-has-dot');
             }
-        } else { // This is Pacman
-            if (this.objectExist(nextMovePos, OBJECT_TYPE.DOT)) {
-                this.removeObject(nextMovePos, [OBJECT_TYPE.DOT]);
-                this.dotCount--;
-            }
         }
 
         // Handle rotation
@@ -105,6 +151,42 @@ class Board {
 
     getDotCount() {
         return this.dotCount;
+    }
+
+    resetGrid() {
+        // Clear all existing fruits
+        this.removeFruit();
+        
+        // Reset dot count tracking
+        this.#totalDotsEaten = 0;
+        
+        // Clear any existing game status
+        if (this.gameStatusDiv.parentNode) {
+            this.gameStatusDiv.parentNode.removeChild(this.gameStatusDiv);
+        }
+    }
+
+    getCurrentGridState() {
+        return {
+            dotCount: this.dotCount,
+            totalDotsEaten: this.#totalDotsEaten,
+            hasFruit: this.#currentFruit !== null,
+            fruitPosition: this.#fruitPosition
+        };
+    }
+
+    cleanup() {
+        // Clear any running timers
+        if (this.#fruitTimer) {
+            clearTimeout(this.#fruitTimer);
+        }
+        
+        // Remove any existing fruits
+        this.removeFruit();
+        
+        // Clear grid
+        this.grid = [];
+        this.DOMGrid.innerHTML = '';
     }
 }
 

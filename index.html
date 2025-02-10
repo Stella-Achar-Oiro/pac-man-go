@@ -8,14 +8,89 @@
   </head>
   <body>
     <div id="wrapper">
+      <!-- Add SVG Sprites -->
+      <div id="game-sprites" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+          <!-- Cherry -->
+          <symbol id="cherry" viewBox="0 0 20 20">
+            <circle cx="8" cy="12" r="6" fill="#ff0000"/>
+            <circle cx="16" cy="10" r="6" fill="#ff0000"/>
+            <path d="M12 2 C12 2 10 6 14 10" stroke="#00ff00" stroke-width="2" fill="none"/>
+          </symbol>
+          
+          <!-- Strawberry -->
+          <symbol id="strawberry" viewBox="0 0 20 20">
+            <path d="M10 2 C14 2 18 6 18 12 C18 18 14 20 10 20 C6 20 2 18 2 12 C2 6 6 2 10 2" fill="#ff0000"/>
+            <path d="M10 0 L12 4 L8 4 Z" fill="#00ff00"/>
+            <!-- Add dots pattern for texture -->
+            <circle cx="6" cy="10" r="1" fill="#ffcccc"/>
+            <circle cx="14" cy="10" r="1" fill="#ffcccc"/>
+            <circle cx="10" cy="14" r="1" fill="#ffcccc"/>
+          </symbol>
+          
+          <!-- Orange -->
+          <symbol id="orange" viewBox="0 0 20 20">
+            <circle cx="10" cy="10" r="8" fill="#ffa500"/>
+            <path d="M10 2 C10 2 8 4 12 6" stroke="#00aa00" stroke-width="2" fill="none"/>
+            <!-- Add texture lines -->
+            <path d="M6 6 Q10 12 14 6" stroke="#ff8c00" stroke-width="1" fill="none"/>
+            <path d="M6 14 Q10 8 14 14" stroke="#ff8c00" stroke-width="1" fill="none"/>
+          </symbol>
+          
+          <!-- Apple -->
+          <symbol id="apple" viewBox="0 0 20 20">
+            <path d="M10 4 C14 4 18 8 18 14 C18 20 14 20 10 20 C6 20 2 20 2 14 C2 8 6 4 10 4" fill="#ff0000"/>
+            <path d="M10 0 L12 4 L8 4 Z" fill="#654321"/>
+            <!-- Add shine -->
+            <path d="M6 8 Q8 10 6 12" stroke="#ff6666" stroke-width="1" fill="none"/>
+          </symbol>
+          
+          <!-- Melon -->
+          <symbol id="melon" viewBox="0 0 20 20">
+            <circle cx="10" cy="10" r="8" fill="#90EE90"/>
+            <!-- Grid pattern -->
+            <path d="M4 4 L16 16" stroke="#006400" stroke-width="1"/>
+            <path d="M16 4 L4 16" stroke="#006400" stroke-width="1"/>
+            <path d="M10 2 L10 18" stroke="#006400" stroke-width="1"/>
+            <path d="M2 10 L18 10" stroke="#006400" stroke-width="1"/>
+          </symbol>
+          
+          <!-- Galaxian -->
+          <symbol id="galaxian" viewBox="0 0 20 20">
+            <path d="M10 2 L18 10 L18 18 L2 18 L2 10 Z" fill="#FFD700"/>
+            <!-- Add details -->
+            <path d="M6 12 L14 12" stroke="#ff4400" stroke-width="2"/>
+            <circle cx="7" cy="8" r="1" fill="#ff4400"/>
+            <circle cx="13" cy="8" r="1" fill="#ff4400"/>
+          </symbol>
+          
+          <!-- Bell -->
+          <symbol id="bell" viewBox="0 0 20 20">
+            <path d="M10 2 C14 2 18 6 18 12 C18 16 14 18 10 18 C6 18 2 16 2 12 C2 6 6 2 10 2" fill="#FFD700"/>
+            <rect x="8" y="16" width="4" height="2" fill="#FFD700"/>
+            <!-- Add highlight -->
+            <path d="M6 8 Q10 12 14 8" stroke="#fff5cc" stroke-width="1" fill="none"/>
+          </symbol>
+          
+          <!-- Key -->
+          <symbol id="key" viewBox="0 0 20 20">
+            <circle cx="6" cy="6" r="4" fill="#4169E1"/>
+            <rect x="6" y="4" width="12" height="4" fill="#4169E1"/>
+            <rect x="14" y="8" width="4" height="4" fill="#4169E1"/>
+            <!-- Add detail -->
+            <circle cx="6" cy="6" r="2" fill="#6495ED"/>
+          </symbol>
+        </svg>
+      </div>
+
       <h1 class="game-title">PAC-MAN</h1>
+      <!-- Rest of your existing HTML remains the same -->
       <div id="game-container">
         <div class="game-section">
           <div id="game-stats">
             <div id="timer">Time: 0s</div>
             <div id="score">Score: 0</div>
             <div id="lives">Lives: 3</div>
-            <div id="fps">FPS: 0</div>
           </div>
           <div id="game">
             <div class="ready hide">Ready!</div>
@@ -40,6 +115,7 @@
                 <li>• Dot: 10 points</li>
                 <li>• Power Pill: 50 points</li>
                 <li>• Ghost: 100 points</li>
+                <li>• Fruits: 100-5000 points</li>
               </ul>
             </div>
             <div class="characters">
