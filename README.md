@@ -1,128 +1,111 @@
-# Pac-Man Game
+# make-your-game
 
-A modern implementation of the classic Pac-Man arcade game using HTML5, CSS3, and JavaScript. This version faithfully recreates the original game mechanics while adding modern visual enhancements.
+## Pac-Man Game
+
+A modern implementation of the classic Pac-Man arcade game using vanilla JavaScript and HTML5.
 
 ## Features
 
-### Core Gameplay
-- Classic Pac-Man maze with dots, power pills, and fruits
-- Four unique ghosts with authentic AI behaviors
-- Progressive difficulty levels
-- Score tracking and lives system
-- Smooth animations and pixel-perfect movement
-- Original sound effects
-- Pause functionality
+- Classic Pac-Man gameplay mechanics
+- Responsive design for both desktop and mobile devices
+- Touch controls for mobile devices
+- Score tracking and high scores
+- Power pills and ghost frightening mechanics
+- Fruit bonus system
+- Pause/Resume functionality
+- Multiple ghost AI behaviors
+- Smooth animations and transitions
 
-### Ghost AI Behaviors
-- **Blinky (Red)**: The pursuer
-  - Directly targets Pac-Man's current position
-  - Starts outside the ghost house
-  - Becomes faster when few dots remain ("Cruise Elroy" mode)
+## Getting Started
 
-- **Pinky (Pink)**: The ambusher
-  - Targets 4 tiles ahead of Pac-Man's current direction
-  - First to leave the ghost house
-  - Uses ambush tactics to trap Pac-Man
+### Prerequisites
 
-- **Inky (Cyan)**: The unpredictable
-  - Uses both Blinky's position and Pac-Man's position for targeting
-  - Leaves ghost house after 30 dots are eaten
-  - Most unpredictable movement patterns
+- Modern web browser
+- Local web server (for development)
 
-- **Clyde (Orange)**: The random
-  - Alternates between chasing Pac-Man and returning to scatter mode
-  - Last to leave ghost house (after 60 dots)
-  - Moves randomly when close to Pac-Man
-
-### Ghost Modes
-1. **Chase Mode**: Each ghost uses their unique targeting behavior
-2. **Scatter Mode**: Ghosts retreat to their home corners
-3. **Frightened Mode**: When Pac-Man eats a power pill
-   - Ghosts turn blue and can be eaten
-   - Move randomly and at reduced speed
-   - Flash before returning to normal
-
-## Scoring System
-
-- **Basic Items**:
-  - Dot: 10 points
-  - Power Pill: 50 points
-  - Fruits (appear at specific intervals):
-    - Cherry: 100 points
-    - Strawberry: 300 points
-    - Orange: 500 points
-    - Apple: 700 points
-    - Melon: 1000 points
-    - Galaxian: 2000 points
-    - Bell: 3000 points
-    - Key: 5000 points
-
-- **Ghost Combo System**:
-  - 1st Ghost: 200 points
-  - 2nd Ghost: 400 points
-  - 3rd Ghost: 800 points
-  - 4th Ghost: 1600 points
-  - Combo resets when power pill effect ends
-
-## Controls
-
-- **Arrow Keys**: Move Pac-Man
-- **ESC**: Pause/Unpause game
-- **Start Button**: Begin new game
-- **Continue Button**: Resume paused game
-- **Restart Button**: Start fresh game
-
-## Technical Details
-
-### Built With
-- HTML5 Canvas for rendering
-- CSS3 for styling and animations
-- Vanilla JavaScript for game logic
-- Web Audio API for sound effects
-
-### Performance Features
-- Optimized collision detection
-- Efficient ghost pathfinding
-- Smooth animation system
-- FPS monitoring and optimization
-
-### Code Architecture
-- Modular design with separate components for:
-  - Game board management
-  - Character movement
-  - Ghost AI
-  - Collision detection
-  - Scoring system
-  - Sound management
-
-## Installation
+### Installation
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://gitea.com/steoiro/make-your-game.git
 ```
 
-2. Open `index.html` in a modern web browser
-3. No additional dependencies or build steps required
+2. Navigate to the project directory:
+```bash
+cd make-your-game
+```
 
-## Browser Compatibility
+3. Start a local server:
+```bash
+# Using Python 3
+python -m http.server 8000
 
-- Chrome (recommended)
-- Firefox
-- Safari
-- Edge
-- Any modern browser with HTML5 support
+# Or using Node.js http-server
+npx http-server
+```
+
+4. Open your browser and navigate to `http://localhost:8000`
+
+## Controls
+
+- **Arrow Keys** or **WASD**: Move Pac-Man
+- **P** or **ESC**: Pause game
+- **Space** or **Enter**: Start game/Continue
+- **Touch Controls**: Available on mobile devices
+
+## Project Structure
+
+```
+pacman-game/
+├── index.html          # Main HTML file
+├── styles.css          # Main stylesheet
+├── js/
+│   ├── config.js       # Game configuration and constants
+│   ├── game.js         # Main game logic
+│   ├── board.js        # Game board management
+│   ├── pacman.js       # Pac-Man character logic
+│   └── ghostManager.js # Ghost AI and management
+├── README.md
+└── LICENSE
+```
+
+## Technical Details
+
+### Core Components
+
+- **Board**: Manages the game grid, walls, dots, and power pills
+- **Pacman**: Handles player movement and collision detection
+- **GhostManager**: Controls ghost behaviors and AI
+- **Game**: Orchestrates game states and scoring
+
+### Key Features Implementation
+
+1. **Ghost AI**:
+   - Chase behavior: Directly targets Pac-Man
+   - Scatter behavior: Moves to corner positions
+   - Frightened behavior: Random movement when vulnerable
+   - Ambush behavior: Predicts Pac-Man's movement
+
+2. **Performance Optimizations**:
+   - RequestAnimationFrame for smooth animations
+   - CSS transforms for better performance
+   - Efficient collision detection
+
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests!
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT [License](LICENSE) - see the LICENSE file for details.
 
-## Credits
+## Acknowledgments
 
 - Original Pac-Man game by Namco
-- Sound effects and sprites inspired by the original arcade game
-- Modern implementation by [Your Name/Team]
+- Ghost AI patterns based on the original arcade game mechanics
+- Community contributions and feedback

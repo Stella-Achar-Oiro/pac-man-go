@@ -1,0 +1,609 @@
+/* Complete styles.css */
+:root {
+    --pacman-yellow: #ffff00;
+    --ghost-blue: #00f;
+    --neon-glow: 0 0 20px;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    color: white;
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    line-height: 1.6;
+    overflow: hidden;
+}
+
+/* Game Container */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Header */
+h1 {
+    color: var(--pacman-yellow);
+    text-shadow: var(--neon-glow) rgba(255, 255, 0, 0.7);
+    font-size: 2.5em;
+    margin-bottom: 1em;
+    animation: pulse 1s ease-in-out infinite alternate;
+}
+
+/* Game Stats */
+#game-stats {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    color: white;
+    font-size: 1.2em;
+    text-shadow: var(--neon-glow) rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 255, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid rgba(0, 0, 255, 0.5);
+}
+
+/* Game Board */
+#game-board {
+    position: relative;
+    border: 3px solid var(--ghost-blue);
+    box-shadow: var(--neon-glow) rgba(0, 0, 255, 0.5),
+                inset var(--neon-glow) rgba(0, 0, 255, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 0; 
+}
+
+#game-board-container {
+    position: relative;
+}
+
+/* Game Elements */
+.wall {
+    background: var(--ghost-blue);
+    border: 1px solid #000;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.dot {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.dot::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+.power-pill {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.power-pill::after {
+    content: '';
+    position: relative;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    animation: powerPulse 0.7s ease-in-out infinite alternate;
+}
+
+.pacman, .ghost {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.15s linear;
+    z-index: 3;
+}
+
+.ghost.scared {
+    filter: brightness(0.7) hue-rotate(180deg);
+    animation: scared 0.2s step-end infinite;
+}
+
+/* Menu Screens */
+.menu-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 40px;
+    border: 3px solid var(--ghost-blue);
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: var(--neon-glow) rgba(0, 0, 255, 0.5);
+    z-index: 100;
+    min-width: 300px;
+}
+
+.menu-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.menu-screen h2 {
+    color: var(--pacman-yellow);
+    margin-bottom: 20px;
+    text-shadow: var(--neon-glow) rgba(255, 255, 0, 0.5);
+}
+
+/* Buttons */
+.game-button {
+    background: var(--ghost-blue);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-family: inherit;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+}
+
+.game-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 0, 255, 0.7);
+}
+
+.game-button:active {
+    transform: scale(0.98);
+}
+
+/* High Scores */
+#high-scores-list {
+    margin: 20px 0;
+}
+
+.score-entry {
+    margin: 10px 0;
+    font-size: 1.1em;
+    color: white;
+    text-shadow: var(--neon-glow) rgba(255, 255, 255, 0.5);
+}
+
+/* Instructions */
+.instructions {
+    margin: 20px 0;
+    text-align: left;
+}
+
+.instructions p {
+    margin: 10px 0;
+    font-size: 0.8em;
+}
+
+/* Game Over Screen */
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 20px;
+    border: 3px solid var(--ghost-blue);
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    box-shadow: var(--neon-glow) rgba(0, 0, 255, 0.5);
+    z-index: 1000;
+    font-family: 'Press Start 2P', monospace;
+    min-width: 300px;
+    pointer-events: auto; /* Ensure clicks are captured */
+}
+
+.game-over button {
+    margin: 10px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #0e034d;
+    border: none;
+    border-radius: 5px;
+    color: white;
+}
+
+.game-over button:hover {
+    background: #0e034d;
+}
+
+/* Pause Menu */
+.pause-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 99;
+}
+
+.pause-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 40px;
+    border: 3px solid var(--ghost-blue);
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    box-shadow: var(--neon-glow) rgba(0, 0, 255, 0.5);
+    z-index: 100;
+}
+
+/* Mobile Touch Controls */
+#touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 10px;
+}
+
+.touch-button {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 255, 0.3);
+    border: 2px solid var(--ghost-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Animations */
+@keyframes pulse {
+    from { opacity: 0.8; }
+    to { opacity: 1; }
+}
+
+@keyframes powerPulse {
+    from { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    to { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+}
+
+@keyframes scared {
+    0%, 50% { filter: brightness(0.7) hue-rotate(180deg); }
+    51%, 100% { filter: brightness(0.7) hue-rotate(180deg) invert(1); }
+}
+
+@keyframes scorePopup {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-20px); opacity: 0; }
+}
+
+.score-popup {
+    position: absolute;
+    color: white;
+    font-size: 1em;
+    animation: scorePopup 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+/* Flash Animation for Power Pill */
+@keyframes flash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(2); }
+}
+
+.flash {
+    animation: flash 0.2s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8em;
+        margin-bottom: 0.5em;
+    }
+
+    #game-stats {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 0.9em;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .menu-screen {
+        padding: 20px;
+        min-width: 280px;
+        width: 90%;
+        max-width: 350px;
+    }
+
+    .game-button {
+        padding: 12px 24px;
+        font-size: 0.9em;
+        margin: 5px 0;
+    }
+
+    #touch-controls {
+        display: grid;
+        grid-template-areas:
+            ". up ."
+            "left . right"
+            ". down .";
+        grid-template-columns: repeat(3, 60px);
+        grid-template-rows: repeat(3, 60px);
+        gap: 5px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        border-radius: 15px;
+        bottom: 10px;
+    }
+
+    .touch-button {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        opacity: 0.8;
+        touch-action: manipulation;
+    }
+
+    .touch-button[data-direction="ArrowUp"] { grid-area: up; }
+    .touch-button[data-direction="ArrowLeft"] { grid-area: left; }
+    .touch-button[data-direction="ArrowRight"] { grid-area: right; }
+    .touch-button[data-direction="ArrowDown"] { grid-area: down; }
+
+    .ready-text {
+        font-size: 18px !important;
+    }
+
+    /* Adjust game over screen */
+    .game-over {
+        width: 90%;
+        max-width: 350px;
+        padding: 15px;
+    }
+
+    .game-over h2 {
+        font-size: 1.2em;
+    }
+
+    .instructions p {
+        font-size: 0.7em;
+        margin: 8px 0;
+    }
+}
+
+/* Small phone adjustments */
+@media (max-width: 375px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    #game-stats {
+        font-size: 0.8em;
+    }
+
+    .touch-button {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+
+    .menu-screen {
+        padding: 15px;
+    }
+
+    .game-button {
+        padding: 10px 20px;
+        font-size: 0.8em;
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+    #game-container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.2em;
+        margin-bottom: 0.3em;
+    }
+
+    #touch-controls {
+        right: 10px;
+        left: auto;
+        transform: none;
+        scale: 0.8;
+    }
+
+    #game-stats {
+        flex-direction: row;
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+}
+
+/* Prevent zoom on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    * {
+        touch-action: manipulation;
+    }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}
+
+.pacman, .ghost {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.15s linear, opacity 0.15s linear;
+}
+
+.ready .pacman,
+.ready .ghost {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.ghost {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.15s linear;
+    z-index: 10;
+}
+
+/* Ghost States */
+.ghost.scared {
+    filter: brightness(0.7) hue-rotate(180deg);
+}
+
+.ghost.scared svg path.ghost-body {
+    fill: blue !important;
+}
+
+.ghost.eaten {
+    opacity: 1; /* Changed from 0.7 */
+}
+
+.ghost.eaten svg path.ghost-body {
+    fill: transparent !important;
+}
+
+.ghost.eaten svg .eye {
+    fill: blue !important;
+    transform: scale(1.2);
+}
+
+/* Pacman death animation */
+.pacman.dying {
+    z-index: 20;  /* Make sure it's visible during death */
+}
+
+.pacman.dying svg circle {
+    animation: pacmanDeath 1s linear forwards;
+}
+
+@keyframes pacmanDeath {
+    0% { 
+        transform: scale(1); 
+        opacity: 1;
+    }
+    100% { 
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* Ghost blinking when scared */
+@keyframes ghostScared {
+    0%, 100% { filter: brightness(0.7) hue-rotate(180deg); }
+    50% { filter: brightness(0.7) hue-rotate(180deg) invert(0.5); }
+}
+
+.ghost.scared {
+    animation: ghostScared 0.4s step-end infinite;
+}
+
+/* Score popup animation */
+.score-popup {
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    text-shadow: var(--neon-glow) rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+    z-index: 30;
+    animation: scoreFloat 0.8s ease-out forwards;
+}
+
+@keyframes scoreFloat {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+/* Ready state blink */
+.ready .pacman,
+.ready .ghost {
+    animation: readyBlink 0.5s infinite alternate;
+}
+
+@keyframes readyBlink {
+    from { opacity: 1; }
+    to { opacity: 0.3; }
+}
+
+.ghost, .pacman {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.fruit {
+    position: absolute;
+    font-size: 20px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-2px); }
+}
+
